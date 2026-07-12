@@ -24,7 +24,7 @@ $pgPass = New-RandomHex 16
 $jwt1 = New-RandomHex 32
 $jwt2 = New-RandomHex 32
 
-$apiUrl = "http://${PublicHost}:8080"
+$apiUrl = "http://${PublicHost}"
 $adminUrl = "http://${PublicHost}"
 
 $example = Join-Path $PSScriptRoot ".env.example"

@@ -80,6 +80,7 @@ services:
         condition: service_healthy
     networks:
       - public
+      - internal
 
 networks:
   internal:
