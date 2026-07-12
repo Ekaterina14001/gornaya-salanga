@@ -1,0 +1,36 @@
+# Environment
+.env
+.env.local
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backend
+backend/bin/
+backend/tmp/
+
+# Flutter
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.pub-cache/
+mobile/.pub/
+mobile/**/GeneratedPluginRegistrant.*
+
+# Admin
+admin/node_modules/
+admin/dist/
+admin/.env
+
+# Demo APK output
+dist/

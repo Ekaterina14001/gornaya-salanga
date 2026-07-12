@@ -1,0 +1,65 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Горная Саланга",
+  "onboardingTitle1": "Добро пожаловать",
+  "onboardingBody1": "Ваш персональный гид по курорту Горная Саланга.",
+  "onboardingTitle2": "Бонусы и QR",
+  "onboardingBody2": "Копите бонусы и показывайте QR-код на кассе.",
+  "onboardingTitle3": "Всё под рукой",
+  "onboardingBody3": "Погода, трассы, веб-камеры и уведомления в одном приложении.",
+  "next": "Далее",
+  "skip": "Пропустить",
+  "start": "Начать",
+  "login": "Вход",
+  "register": "Регистрация",
+  "verify": "Подтверждение",
+  "email": "Email",
+  "password": "Пароль",
+  "phone": "Телефон",
+  "code": "Код подтверждения",
+  "loginButton": "Войти",
+  "registerButton": "Зарегистрироваться",
+  "verifyButton": "Подтвердить",
+  "noAccount": "Нет аккаунта?",
+  "hasAccount": "Уже есть аккаунт?",
+  "home": "Главная",
+  "bonus": "Бонусы",
+  "catalog": "Каталог",
+  "profile": "Профиль",
+  "qrCode": "QR-код",
+  "weather": "Погода",
+  "trails": "Трассы",
+  "webcams": "Веб-камеры",
+  "notifications": "Уведомления",
+  "contact": "Контакты",
+  "balance": "Баланс бонусов",
+  "refreshQr": "Обновить QR",
+  "qrExpiresIn": "QR действителен ещё {seconds} сек",
+  "@qrExpiresIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "loading": "Загрузка…",
+  "errorGeneric": "Что-то пошло не так",
+  "retry": "Повторить",
+  "logout": "Выйти",
+  "guestName": "Гость",
+  "bonusPoints": "{points} бонусов",
+  "@bonusPoints": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogPlaceholder": "Каталог услуг курорта скоро будет доступен.",
+  "weatherPlaceholder": "Данные о погоде загружаются с сервера.",
+  "trailsPlaceholder": "Информация о трассах скоро будет доступна.",
+  "webcamsPlaceholder": "Прямые трансляции с камер курорта.",
+  "notificationsPlaceholder": "Здесь будут ваши уведомления.",
+  "contactPlaceholder": "Свяжитесь с администрацией курорта.",
+  "profilePlaceholder": "Настройки профиля и личные данные."
+}

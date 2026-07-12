@@ -1,0 +1,26 @@
+DROP TABLE IF EXISTS weather_cache;
+DROP TABLE IF EXISTS user_messages;
+DROP TABLE IF EXISTS content_lifts;
+DROP TABLE IF EXISTS content_trails;
+DROP TABLE IF EXISTS content_webcams;
+DROP TABLE IF EXISTS content_rules;
+DROP TABLE IF EXISTS content_schedule;
+DROP TABLE IF EXISTS content_services;
+DROP TABLE IF EXISTS content_about;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS pos_request_logs;
+DROP TABLE IF EXISTS pos_api_keys;
+DROP TABLE IF EXISTS bonus_config_audit;
+DROP TABLE IF EXISTS bonus_config;
+DROP TABLE IF EXISTS bonus_transactions;
+DROP TABLE IF EXISTS bonus_accounts;
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS users;
+
+DROP TYPE IF EXISTS trail_difficulty;
+DROP TYPE IF EXISTS message_status;
+DROP TYPE IF EXISTS pos_system;
+DROP TYPE IF EXISTS notification_type;
+DROP TYPE IF EXISTS bonus_source;
+DROP TYPE IF EXISTS bonus_tx_type;
+DROP TYPE IF EXISTS user_role;
