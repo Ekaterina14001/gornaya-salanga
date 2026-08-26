@@ -47,14 +47,15 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 	r.GET("/health", h.Health)
 
 	auth := r.Group("/api/auth")
+	authLimiter := middleware.NewMemoryRateLimiter(cfg.RateLimitAuth, cfg.RateLimitAuthWindow)
 	{
-		auth.POST("/register", h.Register)
-		auth.POST("/login", h.Login)
+		auth.POST("/register", middleware.RateLimit(authLimiter), h.Register)
+		auth.POST("/login", middleware.RateLimit(authLimiter), h.Login)
 		auth.POST("/refresh", h.Refresh)
-		auth.POST("/verify-phone", h.VerifyPhone)
+		auth.POST("/verify-phone", middleware.RateLimit(authLimiter), h.VerifyPhone)
 		auth.POST("/verify-email", h.VerifyEmail)
-		auth.POST("/forgot-password", h.ForgotPassword)
-		auth.POST("/reset-password", h.ResetPassword)
+		auth.POST("/forgot-password", middleware.RateLimit(authLimiter), h.ForgotPassword)
+		auth.POST("/reset-password", middleware.RateLimit(authLimiter), h.ResetPassword)
 
 		qrLimiter := middleware.NewMemoryRateLimiter(cfg.RateLimitQRVerify, cfg.RateLimitQRWindow)
 		auth.POST("/qr/verify", middleware.RateLimit(qrLimiter), h.VerifyQR)

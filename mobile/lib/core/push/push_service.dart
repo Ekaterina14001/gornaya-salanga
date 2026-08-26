@@ -5,6 +5,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../firebase_options.dart';
 import '../network/dio_client.dart';
+import 'push_navigation.dart';
+import 'web_notification.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -37,21 +39,40 @@ class PushService {
       const initSettings = InitializationSettings(android: androidInit);
       await _localNotifications.initialize(
         initSettings,
-        onDidReceiveNotificationResponse: (_) {},
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload != null && payload.isNotEmpty) {
+          handlePushNavigation(RemoteMessage(data: {'linkUrl': payload}));
+        }
+      },
       );
 
-      if (!kIsWeb) {
+      if (kIsWeb) {
+        final settings = await FirebaseMessaging.instance.requestPermission();
+        debugPrint('Web push permission: ${settings.authorizationStatus}');
+        if (DefaultFirebaseOptions.vapidKey.isEmpty) {
+          debugPrint(
+            'FIREBASE_VAPID_KEY не задан — web push может не работать. '
+            'Firebase Console → Cloud Messaging → Web Push certificates.',
+          );
+        }
+        await _getFcmToken();
+      } else {
         await FirebaseMessaging.instance.requestPermission();
-      } else if (DefaultFirebaseOptions.vapidKey.isNotEmpty) {
-        await FirebaseMessaging.instance.getToken(
-          vapidKey: DefaultFirebaseOptions.vapidKey,
-        );
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          final androidPlugin = _localNotifications
+              .resolvePlatformSpecificImplementation<
+                  AndroidFlutterLocalNotificationsPlugin>();
+          await androidPlugin?.requestNotificationsPermission();
+        }
       }
 
       FirebaseMessaging.onMessage.listen(_showForegroundNotification);
       FirebaseMessaging.instance.onTokenRefresh.listen((_) => registerDeviceToken());
+      await bindPushNavigation();
 
       _initialized = true;
+      await registerDeviceToken();
       return true;
     } catch (e) {
       debugPrint('Push init failed: $e');
@@ -59,17 +80,19 @@ class PushService {
     }
   }
 
+  Future<String?> _getFcmToken() async {
+    if (kIsWeb && DefaultFirebaseOptions.vapidKey.isNotEmpty) {
+      return FirebaseMessaging.instance.getToken(
+        vapidKey: DefaultFirebaseOptions.vapidKey,
+      );
+    }
+    return FirebaseMessaging.instance.getToken();
+  }
+
   Future<void> registerDeviceToken() async {
     if (!_initialized) return;
     try {
-      String? token;
-      if (kIsWeb && DefaultFirebaseOptions.vapidKey.isNotEmpty) {
-        token = await FirebaseMessaging.instance.getToken(
-          vapidKey: DefaultFirebaseOptions.vapidKey,
-        );
-      } else {
-        token = await FirebaseMessaging.instance.getToken();
-      }
+      final token = await _getFcmToken();
       if (token == null || token.isEmpty) return;
 
       final dio = DioClient().dio;
@@ -90,6 +113,11 @@ class PushService {
     final notification = message.notification;
     if (notification == null) return;
 
+    if (kIsWeb) {
+      showWebNotification(notification.title, notification.body);
+      return;
+    }
+
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
         'gornaya_salanga',
@@ -104,6 +132,7 @@ class PushService {
       notification.title,
       notification.body,
       details,
+      payload: message.data['linkUrl'] ?? message.data['link'] ?? '/notifications',
     );
   }
 

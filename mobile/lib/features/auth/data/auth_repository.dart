@@ -56,34 +56,7 @@ class AuthRepository {
 
     );
 
-
-
-    final data = unwrapData(response.data);
-
-    final accessToken = data['accessToken'] as String?;
-
-    final refreshToken = data['refreshToken'] as String?;
-
-    final deviceSecret = data['deviceSecret'] as String?;
-
-
-
-    if (accessToken == null || refreshToken == null) {
-
-      throw const AuthException('Неверный ответ сервера');
-
-    }
-
-
-
-    final user = data['user'] as Map<String, dynamic>?;
-
-    await _secureStorage.saveTokens(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      deviceSecret: deviceSecret,
-      userId: user?['id'] as String?,
-    );
+    await _saveSession(response.data);
 
   }
 
@@ -103,7 +76,7 @@ class AuthRepository {
 
   }) async {
 
-    await _dio.post<Map<String, dynamic>>(
+    final response = await _dio.post<Map<String, dynamic>>(
 
       '/api/auth/register',
 
@@ -120,6 +93,42 @@ class AuthRepository {
         'lastName': lastName,
 
       },
+
+    );
+
+    await _saveSession(response.data);
+
+  }
+
+
+
+  Future<void> _saveSession(Map<String, dynamic>? body) async {
+
+    final data = unwrapData(body);
+
+    final accessToken = data['accessToken'] as String?;
+
+    final refreshToken = data['refreshToken'] as String?;
+
+    final deviceSecret = data['deviceSecret'] as String?;
+
+    if (accessToken == null || refreshToken == null) {
+
+      throw const AuthException('Неверный ответ сервера');
+
+    }
+
+    final user = data['user'] as Map<String, dynamic>?;
+
+    await _secureStorage.saveTokens(
+
+      accessToken: accessToken,
+
+      refreshToken: refreshToken,
+
+      deviceSecret: deviceSecret,
+
+      userId: user?['id'] as String?,
 
     );
 
@@ -145,12 +154,13 @@ class AuthRepository {
   }
 
   Future<void> resetPassword({
-    required String token,
+    required String email,
+    required String code,
     required String newPassword,
   }) async {
     await _dio.post<Map<String, dynamic>>(
       '/api/auth/reset-password',
-      data: {'token': token, 'newPassword': newPassword},
+      data: {'email': email, 'code': code, 'newPassword': newPassword},
     );
   }
 

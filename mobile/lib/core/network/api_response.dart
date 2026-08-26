@@ -16,6 +16,13 @@ dynamic unwrapData(dynamic body) {
   return body;
 }
 
+Map<String, dynamic> unwrapDataMap(dynamic body) {
+  final data = unwrapData(body);
+  if (data is Map<String, dynamic>) return data;
+  if (data is Map) return Map<String, dynamic>.from(data);
+  return {};
+}
+
 String? unwrapErrorMessage(Map<String, dynamic>? body) {
   if (body == null) return null;
   final error = body['error'];

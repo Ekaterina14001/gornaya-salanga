@@ -22,7 +22,7 @@ class GornayaSalangaApp extends StatelessWidget {
           title: 'Горная Саланга',
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          themeMode: ThemeMode.system,
+          themeMode: ThemeMode.light,
           locale: const Locale('ru'),
           supportedLocales: const [Locale('ru')],
           localizationsDelegates: const [

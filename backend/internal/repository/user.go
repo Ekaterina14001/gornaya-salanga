@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gornaya-salanga/backend/internal/model"
+	"github.com/gornaya-salanga/backend/internal/sms"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -30,13 +31,72 @@ func (r *UserRepository) Create(ctx context.Context, req *model.RegisterRequest,
 	if r.pool == nil {
 		return mockGuest(), nil
 	}
+	phone, err := sms.FormatPhoneE164(req.Phone)
+	if err != nil {
+		return nil, err
+	}
 	id := uuid.NewString()
 	row := r.pool.QueryRow(ctx, `
 		INSERT INTO users (id, first_name, last_name, phone, email, password_hash, role)
 		VALUES ($1, $2, $3, $4, $5, $6, 'guest')
 		RETURNING id, first_name, last_name, phone, email, role, phone_verified, email_verified, blocked, last_activity_at, created_at, updated_at
-	`, id, req.FirstName, req.LastName, req.Phone, req.Email, passwordHash)
-	return scanUser(row)
+	`, id, req.FirstName, req.LastName, phone, req.Email, passwordHash)
+	user, err := scanUser(row)
+	if err != nil {
+		return nil, mapUniqueViolation(err)
+	}
+	return user, nil
+}
+
+func (r *UserRepository) FindByPhone(ctx context.Context, phone string) (*model.User, error) {
+	if r.pool == nil {
+		return nil, ErrNotFound
+	}
+	formatted, err := sms.FormatPhoneE164(phone)
+	if err != nil {
+		return nil, err
+	}
+	digits, err := sms.NormalizePhone(phone)
+	if err != nil {
+		return nil, err
+	}
+	row := r.pool.QueryRow(ctx, `
+		SELECT id, first_name, last_name, phone, email, role, phone_verified, email_verified, blocked, last_activity_at, created_at, updated_at
+		FROM users
+		WHERE phone = $1 OR phone = $2 OR phone = $3
+	`, formatted, digits, "8"+digits[1:])
+	user, err := scanUser(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *UserRepository) UpdateUnverifiedGuest(ctx context.Context, userID string, req *model.RegisterRequest, passwordHash string) (*model.User, error) {
+	if r.pool == nil {
+		return mockGuest(), nil
+	}
+	phone, err := sms.FormatPhoneE164(req.Phone)
+	if err != nil {
+		return nil, err
+	}
+	row := r.pool.QueryRow(ctx, `
+		UPDATE users
+		SET first_name = $2, last_name = $3, phone = $4, email = $5, password_hash = $6, updated_at = NOW()
+		WHERE id = $1 AND phone_verified = FALSE
+		RETURNING id, first_name, last_name, phone, email, role, phone_verified, email_verified, blocked, last_activity_at, created_at, updated_at
+	`, userID, req.FirstName, req.LastName, phone, req.Email, passwordHash)
+	user, err := scanUser(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, mapUniqueViolation(err)
+	}
+	return user, nil
 }
 
 func (r *UserRepository) FindByLogin(ctx context.Context, login string) (*model.User, string, error) {

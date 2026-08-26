@@ -18,6 +18,8 @@ import (
 
 	"math/big"
 
+	"strings"
+
 	"sync"
 
 	"time"
@@ -30,6 +32,10 @@ import (
 
 	"github.com/gornaya-salanga/backend/internal/repository"
 
+	"github.com/gornaya-salanga/backend/internal/email"
+
+	"github.com/gornaya-salanga/backend/internal/sms"
+
 	jwtutil "github.com/gornaya-salanga/backend/pkg/jwt"
 
 	"github.com/redis/go-redis/v9"
@@ -40,7 +46,7 @@ import (
 
 
 
-var devPasswordResetTokens sync.Map
+var devPasswordResetCodes sync.Map
 
 var devPhoneCodes sync.Map
 
@@ -58,42 +64,60 @@ type AuthService struct {
 
 	cfg    *config.Config
 
-}
+	sms    sms.Sender
 
-
-
-func NewAuthService(users *repository.UserRepository, bonus *repository.BonusRepository, jwt *jwtutil.Manager, redis *redis.Client, cfg *config.Config) *AuthService {
-
-	return &AuthService{users: users, bonus: bonus, jwt: jwt, redis: redis, cfg: cfg}
+	mail   email.Sender
 
 }
 
 
 
-func (s *AuthService) Register(ctx context.Context, req *model.RegisterRequest) (*model.User, error) {
+func NewAuthService(users *repository.UserRepository, bonus *repository.BonusRepository, jwt *jwtutil.Manager, redis *redis.Client, cfg *config.Config, smsSender sms.Sender, mailSender email.Sender) *AuthService {
+
+	return &AuthService{users: users, bonus: bonus, jwt: jwt, redis: redis, cfg: cfg, sms: smsSender, mail: mailSender}
+
+}
+
+
+
+func (s *AuthService) Register(ctx context.Context, req *model.RegisterRequest) (*model.AuthResponse, error) {
+
+	phone, err := sms.FormatPhoneE164(req.Phone)
+	if err != nil {
+		return nil, errors.New("invalid phone number")
+	}
+	req.Phone = phone
 
 	hash, err := repository.HashPassword(req.Password)
-
 	if err != nil {
-
 		return nil, err
-
 	}
 
-	user, err := s.users.Create(ctx, req, hash)
-
-	if err != nil {
-
+	existing, err := s.users.FindByPhone(ctx, phone)
+	if err == nil {
+		if existing.PhoneVerified {
+			return nil, repository.ErrPhoneTaken
+		}
+		user, err := s.users.UpdateUnverifiedGuest(ctx, existing.ID, req, hash)
+		if err != nil {
+			return nil, err
+		}
+		_ = s.bonus.CreateAccount(ctx, user.ID)
+	} else if !errors.Is(err, repository.ErrNotFound) {
 		return nil, err
-
+	} else {
+		user, err := s.users.Create(ctx, req, hash)
+		if err != nil {
+			return nil, err
+		}
+		_ = s.bonus.CreateAccount(ctx, user.ID)
 	}
 
-	_ = s.bonus.CreateAccount(ctx, user.ID)
+	if err := s.users.SetPhoneVerified(ctx, phone); err != nil {
+		return nil, err
+	}
 
-	_ = s.storePhoneCode(ctx, req.Phone)
-
-	return user, nil
-
+	return s.Login(ctx, req.Email, req.Password)
 }
 
 
@@ -116,19 +140,11 @@ func (s *AuthService) Login(ctx context.Context, login, password string) (*model
 
 	if !repository.CheckPassword(hash, password) {
 
-		if password != "admin123" && password != "guest123" {
-
-			return nil, errors.New("invalid credentials")
-
-		}
-
-		if login == "admin@gornayasalanga.ru" && password != "admin123" {
-
-			return nil, errors.New("invalid credentials")
-
-		}
-
-		if login != "admin@gornayasalanga.ru" && password != "guest123" {
+		if s.cfg.DevAuthBypassEnabled() &&
+			((login == "admin@gornayasalanga.ru" && password == "admin123") ||
+				(login != "admin@gornayasalanga.ru" && password == "guest123")) {
+			// dev-only demo login when seed password hash mismatch
+		} else {
 
 			return nil, errors.New("invalid credentials")
 
@@ -316,11 +332,17 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*model.
 
 func (s *AuthService) VerifyPhone(ctx context.Context, req *model.VerifyPhoneRequest) error {
 
+	phone, err := sms.FormatPhoneE164(req.Phone)
+	if err != nil {
+		return errors.New("invalid phone number")
+	}
+	req.Phone = phone
+
 	code, err := s.getPhoneCode(ctx, req.Phone)
 
 	if err != nil || code != req.Code {
 
-		if req.Code == "123456" {
+		if s.cfg.SMSDevBypassEnabled() && req.Code == "123456" {
 
 			_ = s.users.SetPhoneVerified(ctx, req.Phone)
 
@@ -354,43 +376,41 @@ func (s *AuthService) VerifyPhone(ctx context.Context, req *model.VerifyPhoneReq
 
 
 
-func (s *AuthService) VerifyEmail(ctx context.Context, token string) error {
-
-	if token == "" {
-
-		return errors.New("invalid token")
-
+func (s *AuthService) VerifyEmail(ctx context.Context, email, code string) error {
+	email = normalizeEmail(email)
+	code = strings.TrimSpace(code)
+	if email == "" || code == "" {
+		return errors.New("invalid verification code")
 	}
 
-	userID, err := s.getEmailToken(ctx, token)
+	stored, err := s.getEmailCode(ctx, email)
+	if err != nil || stored != code {
+		return errors.New("invalid or expired code")
+	}
 
+	userID, err := s.users.FindIDByEmail(ctx, email)
 	if err != nil {
-
-		return errors.New("invalid or expired token")
-
+		return errors.New("invalid or expired code")
 	}
 
 	if err := s.users.SetEmailVerified(ctx, userID); err != nil {
-
 		return err
-
 	}
 
 	if s.redis != nil {
-
-		_ = s.redis.Del(ctx, "verify:email:"+token).Err()
-
+		_ = s.redis.Del(ctx, "verify:email:"+email).Err()
 	}
 
 	return nil
-
 }
 
 
 
 func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
 
-	userID, err := s.users.FindIDByEmail(ctx, email)
+	email = normalizeEmail(email)
+
+	_, err := s.users.FindIDByEmail(ctx, email)
 
 	if err != nil {
 
@@ -398,7 +418,7 @@ func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
 
 	}
 
-	token, err := randomToken(32)
+	code, err := randomCode(6)
 
 	if err != nil {
 
@@ -408,15 +428,17 @@ func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
 
 	if s.redis != nil {
 
-		_ = s.redis.Set(ctx, "reset:password:"+token, userID, 30*time.Minute).Err()
+		_ = s.redis.Set(ctx, resetCodeKey(email), code, 30*time.Minute).Err()
 
 	} else {
 
-		devPasswordResetTokens.Store(token, userID)
+		devPasswordResetCodes.Store(email, code)
 
 	}
 
-	log.Info().Str("email", email).Str("resetToken", token).Msg("password reset token generated")
+	if err := s.mail.SendPasswordReset(ctx, email, code); err != nil {
+		log.Warn().Err(err).Str("email", email).Msg("password reset email failed")
+	}
 
 	return nil
 
@@ -424,30 +446,27 @@ func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
 
 
 
-func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword string) error {
+func (s *AuthService) ResetPassword(ctx context.Context, email, code, newPassword string) error {
 
-	if token == "" {
+	email = normalizeEmail(email)
+	code = strings.TrimSpace(code)
 
-		return errors.New("invalid token")
+	if email == "" || code == "" {
 
-	}
-
-	userID := ""
-
-	if s.redis != nil {
-
-		userID, _ = s.redis.Get(ctx, "reset:password:"+token).Result()
-
-	} else if v, ok := devPasswordResetTokens.LoadAndDelete(token); ok {
-
-		userID, _ = v.(string)
+		return errors.New("invalid reset code")
 
 	}
 
-	if userID == "" {
+	stored, err := s.getResetCode(ctx, email)
+	if err != nil || stored != code {
+		if !(s.cfg.EmailDevBypassEnabled() && code == "123456") {
+			return errors.New("invalid or expired code")
+		}
+	}
 
-		return errors.New("invalid or expired token")
-
+	userID, err := s.users.FindIDByEmail(ctx, email)
+	if err != nil {
+		return errors.New("invalid or expired code")
 	}
 
 	hash, err := repository.HashPassword(newPassword)
@@ -466,12 +485,37 @@ func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword stri
 
 	if s.redis != nil {
 
-		_ = s.redis.Del(ctx, "reset:password:"+token).Err()
+		_ = s.redis.Del(ctx, resetCodeKey(email)).Err()
+
+	} else {
+
+		devPasswordResetCodes.Delete(email)
 
 	}
 
 	return nil
 
+}
+
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+func resetCodeKey(email string) string {
+	return "reset:password:" + normalizeEmail(email)
+}
+
+func (s *AuthService) getResetCode(ctx context.Context, email string) (string, error) {
+	email = normalizeEmail(email)
+	if s.redis != nil {
+		return s.redis.Get(ctx, resetCodeKey(email)).Result()
+	}
+	if v, ok := devPasswordResetCodes.Load(email); ok {
+		if code, ok := v.(string); ok {
+			return code, nil
+		}
+	}
+	return "", errors.New("no code")
 }
 
 
@@ -516,7 +560,33 @@ func (s *AuthService) VerifyQR(ctx context.Context, token string) (*model.QRVeri
 
 
 
+func (s *AuthService) sendEmailVerification(ctx context.Context, userID, emailAddr string) error {
+	if emailAddr == "" {
+		return nil
+	}
+	emailAddr = normalizeEmail(emailAddr)
+	code, err := randomCode(6)
+	if err != nil {
+		return err
+	}
+	if s.redis != nil {
+		_ = s.redis.Set(ctx, "verify:email:"+emailAddr, code, 24*time.Hour).Err()
+	} else {
+		return nil
+	}
+	if err := s.mail.SendEmailVerification(ctx, emailAddr, code); err != nil {
+		log.Warn().Err(err).Str("email", emailAddr).Msg("verification email failed")
+	}
+	return nil
+}
+
 func (s *AuthService) storePhoneCode(ctx context.Context, phone string) error {
+
+	formatted, err := sms.FormatPhoneE164(phone)
+	if err != nil {
+		return err
+	}
+	phone = formatted
 
 	code, err := randomCode(6)
 
@@ -536,7 +606,11 @@ func (s *AuthService) storePhoneCode(ctx context.Context, phone string) error {
 
 	}
 
-	log.Info().Str("phone", phone).Str("code", code).Msg("SMS verification code")
+	if err := s.sms.SendVerificationCode(ctx, phone, code); err != nil {
+
+		return fmt.Errorf("send sms: %w", err)
+
+	}
 
 	return nil
 
@@ -568,16 +642,11 @@ func (s *AuthService) getPhoneCode(ctx context.Context, phone string) (string, e
 
 
 
-func (s *AuthService) getEmailToken(ctx context.Context, token string) (string, error) {
-
+func (s *AuthService) getEmailCode(ctx context.Context, email string) (string, error) {
 	if s.redis == nil {
-
 		return "", errors.New("no redis")
-
 	}
-
-	return s.redis.Get(ctx, "verify:email:"+token).Result()
-
+	return s.redis.Get(ctx, "verify:email:"+email).Result()
 }
 
 

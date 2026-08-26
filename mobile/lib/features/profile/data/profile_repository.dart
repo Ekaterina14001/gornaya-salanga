@@ -11,7 +11,7 @@ class ProfileRepository {
 
   Future<Map<String, dynamic>> fetchProfile() async {
     final response = await _dio.get<Map<String, dynamic>>('/api/users/me');
-    return unwrapData(response.data);
+    return unwrapDataMap(response.data);
   }
 
   Future<Map<String, dynamic>> updateProfile({

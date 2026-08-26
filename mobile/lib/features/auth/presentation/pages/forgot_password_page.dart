@@ -75,18 +75,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             children: [
               if (_sent) ...[
                 const Text(
-                  'Если аккаунт существует, мы отправили инструкцию по сбросу пароля.',
+                  'Мы отправили 6-значный код на ваш email. Введите его на следующем экране.',
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'В режиме разработки токен сброса пишется в лог backend (resetToken). '
-                  'Скопируйте его на экране «Новый пароль».',
+                  'Проверьте папку «Спам», если письма нет во входящих.',
                   style: TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: _openResetPassword,
-                  child: const Text('Ввести токен'),
+                  child: const Text('Ввести код'),
                 ),
               ] else ...[
                 TextFormField(

@@ -1,11 +1,12 @@
 #!/bin/bash
 # One-time VPS setup (Ubuntu 22.04/24.04). Run as root on the server.
-# Usage: curl -fsSL ... | bash   OR   bash setup-server.sh
+# Usage: bash setup-server.sh
 
 set -euo pipefail
 
 echo "=== Gornaya Salanga — VPS setup ==="
 
+# Docker install / repair
 if ! command -v docker >/dev/null 2>&1; then
   echo "Installing Docker..."
   apt-get update
@@ -19,33 +20,45 @@ if ! command -v docker >/dev/null 2>&1; then
     > /etc/apt/sources.list.d/docker.list
   apt-get update
   apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-  systemctl enable docker
-  systemctl start docker
+fi
+
+systemctl enable docker
+systemctl start docker || {
+  echo "Docker failed to start. Check: journalctl -u docker -n 50"
+  exit 1
+}
+
+# Allow non-root docker (e.g. user dev)
+if id dev >/dev/null 2>&1; then
+  usermod -aG docker dev || true
+  echo "User dev added to docker group (re-login required)"
 fi
 
 echo "Docker: $(docker --version)"
 echo "Compose: $(docker compose version)"
 
-# Firewall: SSH + API + Admin
+# Host nginx for salanga.ru domains (optional; see nginx-host/setup-host-nginx.sh)
+if ! command -v nginx >/dev/null 2>&1; then
+  apt-get install -y nginx certbot python3-certbot-nginx || true
+fi
+
+# Firewall
 if command -v ufw >/dev/null 2>&1; then
-  ufw allow OpenSSH
+  ufw allow 22022/tcp comment 'SSH custom' || ufw allow OpenSSH
   ufw allow 80/tcp
-  ufw allow 8080/tcp
+  ufw allow 443/tcp
   ufw --force enable || true
-  echo "UFW: ports 22, 80, 8080 open"
+  echo "UFW: ports 22022 (or 22), 80, 443 open"
 fi
 
 PUBLIC_IP=$(curl -4 -s ifconfig.me || curl -4 -s icanhazip.com || hostname -I | awk '{print $1}')
 echo ""
 echo "Server public IP (check): $PUBLIC_IP"
 echo ""
-echo "Next steps:"
-echo "  1. Upload/clone project to /opt/gornaya-salanga (or ~/gornaya-salanga)"
-echo "  2. cd deploy && cp .env.example .env && nano .env"
-echo "     Set PUBLIC_HOST and PUBLIC_API_URL to this server IP"
-echo "     Set POSTGRES_PASSWORD, JWT_SECRET, JWT_REFRESH_SECRET"
-echo "     Update DATABASE_URL password to match POSTGRES_PASSWORD"
-echo "  3. docker compose up -d --build"
-echo "  4. curl http://$PUBLIC_IP:8080/health"
-echo "  5. Open admin: http://$PUBLIC_IP"
-echo "  6. Rebuild mobile APK with PUBLIC_API_URL"
+echo "salanga.ru production:"
+echo "  1. Upload project to /home/dev/gornaya-salanga"
+echo "  2. deploy/.env — api.salanga.ru + admin.salanga.ru (see prepare-salanga-env.ps1)"
+echo "  3. cd deploy && docker compose up -d --build"
+echo "  4. sudo bash deploy/nginx-host/setup-host-nginx.sh"
+echo "  5. curl http://api.salanga.ru/health"
+echo "  6. Open https://admin.salanga.ru after certbot"

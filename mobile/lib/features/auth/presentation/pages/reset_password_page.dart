@@ -17,7 +17,7 @@ class ResetPasswordPage extends StatefulWidget {
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
-  final _tokenController = TextEditingController();
+  final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authRepository = AuthRepository();
   bool _loading = false;
@@ -25,7 +25,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   @override
   void dispose() {
-    _tokenController.dispose();
+    _codeController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -46,7 +46,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     try {
       final newPassword = _passwordController.text;
       await _authRepository.resetPassword(
-        token: _tokenController.text.trim(),
+        email: email,
+        code: _codeController.text.trim(),
         newPassword: newPassword,
       );
       if (!mounted) return;
@@ -104,12 +105,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     const SizedBox(height: 16),
                   ],
                   TextFormField(
-                    controller: _tokenController,
+                    controller: _codeController,
                     decoration: const InputDecoration(
-                      labelText: 'Токен сброса',
-                      helperText: 'Скопируйте из лога backend после запроса восстановления',
+                      labelText: 'Код из письма',
+                      helperText: '6 цифр из email',
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Введите токен' : null,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    validator: (v) =>
+                        v == null || v.trim().length != 6 ? 'Введите 6-значный код' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(

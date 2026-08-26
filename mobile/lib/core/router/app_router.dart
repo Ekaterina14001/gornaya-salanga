@@ -24,8 +24,11 @@ import '../storage/hive_boxes.dart';
 class AppRouter {
   AppRouter._();
 
+  static final rootNavigatorKey = GlobalKey<NavigatorState>();
+
   static GoRouter router(AuthBloc authBloc) {
     return GoRouter(
+      navigatorKey: rootNavigatorKey,
       initialLocation: HiveBoxes.isOnboardingComplete ? '/login' : '/onboarding',
       refreshListenable: _AuthRefreshListenable(authBloc),
       redirect: (context, state) {

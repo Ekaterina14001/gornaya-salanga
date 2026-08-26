@@ -42,7 +42,8 @@ type VerifyPhoneRequest struct {
 }
 
 type VerifyEmailRequest struct {
-	Token string `json:"token" validate:"required"`
+	Email string `json:"email" validate:"required,email"`
+	Code  string `json:"code" validate:"required,len=6"`
 }
 
 type AuthResponse struct {

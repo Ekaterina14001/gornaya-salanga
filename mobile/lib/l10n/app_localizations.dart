@@ -256,6 +256,42 @@ abstract class AppLocalizations {
   /// **'QR-код'**
   String get qrCode;
 
+  /// No description provided for @bookRoom.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забронировать номер'**
+  String get bookRoom;
+
+  /// No description provided for @installAppTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Установить приложение'**
+  String get installAppTitle;
+
+  /// No description provided for @installAppButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Установить'**
+  String get installAppButton;
+
+  /// No description provided for @installAppHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавьте на главный экран — так открывать курорт будет быстрее.'**
+  String get installAppHint;
+
+  /// No description provided for @installAppIosHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Safari → Поделиться → «На экран Домой» → Добавить.'**
+  String get installAppIosHint;
+
+  /// No description provided for @installAppAndroidHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Chrome → меню ⋮ → «Установить приложение» или «Добавить на главный экран».'**
+  String get installAppAndroidHint;
+
   /// No description provided for @weather.
   ///
   /// In ru, this message translates to:

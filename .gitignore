@@ -16,6 +16,8 @@ Thumbs.db
 # Backend
 backend/bin/
 backend/tmp/
+backend/secrets/*.json
+!backend/secrets/.gitkeep
 
 # Flutter
 mobile/.dart_tool/

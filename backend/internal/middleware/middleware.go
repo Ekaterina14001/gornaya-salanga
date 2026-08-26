@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -131,6 +132,7 @@ type RateLimiter interface {
 }
 
 type memoryRateLimiter struct {
+	mu      sync.Mutex
 	limit   int
 	window  time.Duration
 	buckets map[string][]time.Time
@@ -141,6 +143,8 @@ func NewMemoryRateLimiter(limit int, window time.Duration) RateLimiter {
 }
 
 func (r *memoryRateLimiter) Allow(key string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	now := time.Now()
 	cutoff := now.Add(-r.window)
 	times := r.buckets[key]
@@ -164,7 +168,7 @@ func RateLimit(limiter RateLimiter) gin.HandlerFunc {
 		key := c.ClientIP() + ":" + c.FullPath()
 		if !limiter.Allow(key) {
 			c.JSON(http.StatusTooManyRequests, response.Envelope{
-				Error: &response.ErrorBody{Code: "rate_limited", Message: "too many requests"},
+				Error: &response.ErrorBody{Code: "rate_limited", Message: "Слишком много запросов, попробуйте позже"},
 			})
 			c.Abort()
 			return

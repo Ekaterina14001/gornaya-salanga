@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/storage/hive_boxes.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/error_placeholder.dart';
 import '../../../../shared/widgets/markdown_content.dart';
@@ -28,7 +29,7 @@ class _CatalogPageState extends State<CatalogPage> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _tabs = TabController(length: 5, vsync: this);
-    _load();
+    _load(refresh: true);
   }
 
   @override
@@ -38,6 +39,9 @@ class _CatalogPageState extends State<CatalogPage> with SingleTickerProviderStat
   }
 
   Future<void> _load({bool refresh = false}) async {
+    if (refresh) {
+      await HiveBoxes.settings.delete('services_cache');
+    }
     setState(() {
       _loading = true;
       _error = null;
@@ -218,6 +222,13 @@ class _CatalogPageState extends State<CatalogPage> with SingleTickerProviderStat
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.catalog),
+        actions: [
+          IconButton(
+            tooltip: 'Обновить',
+            icon: const Icon(Icons.refresh),
+            onPressed: _loading ? null : () => _load(refresh: true),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabs,
           isScrollable: true,

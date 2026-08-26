@@ -5,6 +5,7 @@ import (
 	"github.com/gornaya-salanga/backend/internal/model"
 	"github.com/gornaya-salanga/backend/pkg/response"
 	"github.com/gornaya-salanga/backend/pkg/validator"
+	"strings"
 )
 
 type loginBody struct {
@@ -60,7 +61,7 @@ func (h *Handler) Register(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
-	response.Created(c, user)
+	response.OK(c, user)
 }
 
 func (h *Handler) Refresh(c *gin.Context) {
@@ -96,7 +97,7 @@ func (h *Handler) VerifyEmail(c *gin.Context) {
 		response.BadRequest(c, "invalid request body")
 		return
 	}
-	if err := h.auth.VerifyEmail(c.Request.Context(), req.Token); err != nil {
+	if err := h.auth.VerifyEmail(c.Request.Context(), req.Email, req.Code); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
@@ -117,6 +118,8 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 
 func (h *Handler) ResetPassword(c *gin.Context) {
 	var body struct {
+		Email       string `json:"email"`
+		Code        string `json:"code"`
 		Token       string `json:"token"`
 		NewPassword string `json:"newPassword"`
 	}
@@ -124,7 +127,11 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 		response.BadRequest(c, "invalid request body")
 		return
 	}
-	if err := h.auth.ResetPassword(c.Request.Context(), body.Token, body.NewPassword); err != nil {
+	code := strings.TrimSpace(body.Code)
+	if code == "" {
+		code = strings.TrimSpace(body.Token)
+	}
+	if err := h.auth.ResetPassword(c.Request.Context(), body.Email, code, body.NewPassword); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}

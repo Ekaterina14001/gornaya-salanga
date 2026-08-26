@@ -78,16 +78,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         firstName: event.firstName,
         lastName: event.lastName,
       );
-      emit(
-        AuthState.unauthenticated().copyWith(
-          pendingRegistration: PendingRegistration(
-            email: event.email,
-            password: event.password,
-            phone: event.phone,
-          ),
-          isLoading: false,
-        ),
-      );
+      emit(const AuthState.authenticated());
     } on DioException catch (e) {
       emit(
         state.copyWith(

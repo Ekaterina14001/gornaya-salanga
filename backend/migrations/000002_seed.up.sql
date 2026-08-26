@@ -4,9 +4,9 @@
 INSERT INTO users (id, first_name, last_name, phone, email, password_hash, role, phone_verified, email_verified, device_secret)
 VALUES
     ('11111111-1111-1111-1111-111111111111', 'Админ', 'Системы', '+79000000001', 'admin@gornayasalanga.ru',
-     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin', TRUE, TRUE, NULL),
+     '$2a$10$OV40BXecbYbegS4EhNoi/ufW55kI90w3YE6uuS4tG4KilbjbGa04i', 'admin', TRUE, TRUE, NULL),
     ('22222222-2222-2222-2222-222222222222', 'Иван', 'Гостев', '+79000000002', 'guest@gornayasalanga.ru',
-     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'guest', TRUE, TRUE,
+     '$2a$10$Og4eDDJNcwX6aLZQ6cw.c.vJub1GQUDBBbbLQmmSWcoFkJi35T12.', 'guest', TRUE, TRUE,
      'dev-device-secret-guest-12345678901234567890123456789012');
 
 INSERT INTO bonus_accounts (user_id, balance, total_earned, total_spent)

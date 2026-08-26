@@ -22,11 +22,27 @@ type Config struct {
 	AdminOrigin       string
 	RateLimitQRVerify int
 	RateLimitQRWindow time.Duration
+	RateLimitAuth     int
+	RateLimitAuthWindow time.Duration
 	OpenWeatherAPIKey string
 	PosAPIKeys        map[string]string
 	QRTTLSeconds      int
 	FCMCredentialsFile string
 	RedisRequired      bool
+	SMSMode            string
+	SMSRuAPIID         string
+	SMSRuFrom          string
+	SMSMessageTemplate string
+	SMSRuTest          bool
+	EmailMode          string
+	SMTPHost           string
+	SMTPPort           int
+	SMTPTLS            string
+	SMTPUser           string
+	SMTPPassword       string
+	SMTPFrom           string
+	SMTPFromName       string
+	AppPublicURL       string
 }
 
 func Load() (*Config, error) {
@@ -43,13 +59,29 @@ func Load() (*Config, error) {
 		OpenWeatherAPIKey: getEnv("OPENWEATHERMAP_API_KEY", ""),
 		QRTTLSeconds:       getEnvInt("QR_TTL_SECONDS", 60),
 		RateLimitQRVerify:  getEnvInt("RATE_LIMIT_QR_VERIFY", 10),
+		RateLimitAuth:      getEnvInt("RATE_LIMIT_AUTH", 20),
 		FCMCredentialsFile: getEnv("FCM_CREDENTIALS_FILE", ""),
 		RedisRequired:      getEnvBool("REDIS_REQUIRED", false),
+		SMSMode:            getEnv("SMS_MODE", "log"),
+		SMSRuAPIID:         getEnv("SMS_RU_API_ID", ""),
+		SMSRuFrom:          getEnv("SMS_RU_FROM", ""),
+		SMSMessageTemplate: getEnv("SMS_MESSAGE_TEMPLATE", "Код подтверждения Горная Саланга: {code}"),
+		SMSRuTest:          getEnvBool("SMS_RU_TEST", false),
+		EmailMode:          getEnv("EMAIL_MODE", "log"),
+		SMTPHost:           getEnv("SMTP_HOST", ""),
+		SMTPPort:           getEnvInt("SMTP_PORT", 465),
+		SMTPTLS:            getEnv("SMTP_TLS", ""),
+		SMTPUser:           getEnv("SMTP_USER", ""),
+		SMTPPassword:       getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:           getEnv("SMTP_FROM", ""),
+		SMTPFromName:       getEnv("SMTP_FROM_NAME", "Gornaya Salanga"),
+		AppPublicURL:       strings.TrimRight(getEnv("APP_PUBLIC_URL", "http://localhost:5173"), "/"),
 	}
 
 	cfg.JWTAccessTTL = parseDuration(getEnv("JWT_ACCESS_TTL", "15m"), 15*time.Minute)
 	cfg.JWTRefreshTTL = parseDuration(getEnv("JWT_REFRESH_TTL", "720h"), 720*time.Hour)
 	cfg.RateLimitQRWindow = parseDuration(getEnv("RATE_LIMIT_QR_WINDOW", "1m"), time.Minute)
+	cfg.RateLimitAuthWindow = parseDuration(getEnv("RATE_LIMIT_AUTH_WINDOW", "1m"), time.Minute)
 
 	cors := getEnv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
 	cfg.CORSOrigins = splitAndTrim(cors)
@@ -97,6 +129,14 @@ func parseDuration(v string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return d
+}
+
+func (c *Config) SMSDevBypassEnabled() bool {
+	return !c.IsProduction() && (strings.ToLower(strings.TrimSpace(c.SMSMode)) == "" || strings.ToLower(strings.TrimSpace(c.SMSMode)) == "log")
+}
+
+func (c *Config) EmailDevBypassEnabled() bool {
+	return !c.IsProduction() && (strings.ToLower(strings.TrimSpace(c.EmailMode)) == "" || strings.ToLower(strings.TrimSpace(c.EmailMode)) == "log")
 }
 
 func splitAndTrim(s string) []string {

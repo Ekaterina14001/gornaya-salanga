@@ -102,6 +102,29 @@ npm run dev
 
 Admin: http://localhost:5173
 
+### Flutter Web (локально)
+
+По умолчанию приложение ходит на `http://localhost:8080` — **backend должен быть запущен**:
+
+```powershell
+.\start-infra.ps1
+cd backend
+go run ./cmd/api
+```
+
+В другом терминале:
+
+```powershell
+cd mobile
+powershell -ExecutionPolicy Bypass -File .\run-web-local.ps1
+```
+
+Или: `flutter run -d chrome`
+
+Гость: `guest@gornayasalanga.ru` / `guest123`
+
+> Если собрали web с `-ApiUrl http://91.218.113.254` и открываете с `localhost` — браузер блокирует запросы (CORS). Для локальной разработки используйте `localhost:8080`, для демо на iPhone — `http://91.218.113.254/app/`.
+
 **Dev credentials:**
 - Admin: `admin@gornayasalanga.ru` / `admin123`
 - Guest: `guest@gornayasalanga.ru` / `guest123`
@@ -128,6 +151,38 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:8080
 **Физический телефон:** IP компьютера в Wi‑Fi, например `--dart-define=API_BASE_URL=http://192.168.1.5:8080`.
 
 > Если в `flutter devices` только Chrome/Edge — установите [Android Studio](https://developer.android.com/studio) и создайте AVD (Virtual Device Manager).
+
+### Push-уведомления (Firebase / FCM)
+
+Проект Firebase: **gornaya-slanga** (ваш Google-аккаунт).
+
+**Один раз — скопировать ключи с рабочего стола:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup-firebase.ps1
+```
+
+Копирует:
+- `backend/secrets/fcm-service-account.json` — серверная отправка push из админки
+- `mobile/android/app/google-services.json` — Android-приложение
+
+В `backend/.env`:
+```env
+FCM_CREDENTIALS_FILE=secrets/fcm-service-account.json
+```
+
+**Локальный тест (Android):**
+
+1. Backend + Redis: `.\start-infra.ps1`, затем `cd backend; go run ./cmd/api`  
+   В логе должно быть: `FCM push enabled`
+2. Телефон или эмулятор: `cd mobile; flutter run`
+3. Войти как гость, **разрешить уведомления**
+4. Админка → Уведомления → рассылка — push должен прийти на телефон
+
+**Web push:** нужен VAPID-ключ из Firebase Console → Cloud Messaging → Web Push certificates, затем сборка с  
+`--dart-define=FIREBASE_VAPID_KEY=...`
+
+> Файлы `backend/secrets/*.json` не попадают в git. На VPS скопируйте `fcm-service-account.json` в `backend/secrets/` перед `docker compose up`.
 
 ### Demo APK (Android, для заказчика)
 
@@ -243,4 +298,20 @@ docker compose up -d --build
 ```
 
 Файлы: `deploy/docker-compose.yml`, `backend/Dockerfile`, `admin/Dockerfile`.
+
+### Flutter Web (iPhone / Safari)
+
+Гостевое приложение в браузере: `http://ВАШ_IP/app/`
+
+**На Windows — сборка и выкладка:**
+
+```powershell
+cd mobile
+powershell -ExecutionPolicy Bypass -File .\build-web.ps1 -ApiUrl "http://91.218.113.254"
+powershell -ExecutionPolicy Bypass -File .\upload-web.ps1
+```
+
+Или вручную: `scp -r build\web root@IP:/opt/gornaya-salanga/mobile/build/`, затем на VPS `docker compose up -d --build mobile-web admin`.
+
+**Логин гостя:** `guest@gornayasalanga.ru` / `guest123` (по Wi‑Fi).
 

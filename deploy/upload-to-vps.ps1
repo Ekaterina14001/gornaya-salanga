@@ -6,8 +6,23 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Server,
-    [string]$RemotePath = "/opt/gornaya-salanga"
+    [string]$RemotePath = "/opt/gornaya-salanga",
+    [int]$Port = 22,
+    [string]$SshKeyPath = ""
 )
+
+$sshArgs = @()
+$scpArgs = @()
+if ($Port -ne 22) {
+    $sshArgs += @("-p", "$Port")
+    $scpArgs += @("-P", "$Port")
+}
+if ($SshKeyPath -and (Test-Path $SshKeyPath)) {
+    $sshArgs += @("-i", $SshKeyPath)
+    $scpArgs += @("-i", $SshKeyPath)
+}
+function Invoke-Ssh([string]$Remote) { & ssh @sshArgs $Server $Remote }
+function Invoke-Scp([string]$Local, [string]$Remote) { & scp @scpArgs $Local "${Server}:${Remote}" }
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
@@ -25,7 +40,7 @@ if (-not $ssh -or -not $scp) {
 }
 
 Write-Host "Creating remote directory $RemotePath ..."
-ssh $Server "mkdir -p $RemotePath"
+Invoke-Ssh "mkdir -p $RemotePath"
 
 $exclude = @(
     "node_modules", ".git", "mobile/build", "mobile/.dart_tool",
@@ -40,8 +55,8 @@ if (Get-Command tar -ErrorAction SilentlyContinue) {
     $tarArgs = @("-czf", $archive, "--exclude=.git", "--exclude=node_modules", "--exclude=mobile/build", "--exclude=mobile/.dart_tool", "--exclude=admin/node_modules", "--exclude=dist", ".")
     & tar @tarArgs
     Pop-Location
-    scp $archive "${Server}:/tmp/gornaya-salanga-deploy.tar.gz"
-    ssh $Server "mkdir -p $RemotePath && tar -xzf /tmp/gornaya-salanga-deploy.tar.gz -C $RemotePath --strip-components=0 2>/dev/null || tar -xzf /tmp/gornaya-salanga-deploy.tar.gz -C $RemotePath"
+    Invoke-Scp $archive "/tmp/gornaya-salanga-deploy.tar.gz"
+    Invoke-Ssh "mkdir -p $RemotePath && tar -xzf /tmp/gornaya-salanga-deploy.tar.gz -C $RemotePath --strip-components=0 2>/dev/null || tar -xzf /tmp/gornaya-salanga-deploy.tar.gz -C $RemotePath"
     Remove-Item $archive -Force -ErrorAction SilentlyContinue
 } else {
     Write-Host "tar not found. Upload manually via WinSCP/FileZilla to $RemotePath" -ForegroundColor Yellow
@@ -51,10 +66,10 @@ if (Get-Command tar -ErrorAction SilentlyContinue) {
 }
 
 Write-Host "Uploading deploy/.env ..."
-scp (Join-Path $PSScriptRoot ".env") "${Server}:${RemotePath}/deploy/.env"
+Invoke-Scp (Join-Path $PSScriptRoot ".env") "${RemotePath}/deploy/.env"
 
 Write-Host "Starting docker compose on server ..."
-ssh $Server "cd $RemotePath/deploy && docker compose up -d --build"
+Invoke-Ssh "cd $RemotePath/deploy && docker compose up -d --build"
 
 Write-Host ""
 Write-Host "Done. Check:" -ForegroundColor Green

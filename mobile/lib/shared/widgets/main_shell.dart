@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/app_link.dart';
 import '../../l10n/app_localizations.dart';
-
+import 'book_room_button.dart';
 class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.navigationShell});
 
@@ -31,6 +32,15 @@ class MainShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
+      floatingActionButton: navigationShell.currentIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () => openAppLink(context, kSalangaBookingUrl),
+              icon: const Icon(Icons.hotel_outlined),
+              label: Text(l10n.bookRoom),
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              foregroundColor: Colors.white,
+            )
+          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: navigationShell.goBranch,

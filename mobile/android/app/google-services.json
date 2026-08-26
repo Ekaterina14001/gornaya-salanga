@@ -1,21 +1,40 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "gornaya-salanga-placeholder",
-    "storage_bucket": "gornaya-salanga-placeholder.appspot.com"
+    "project_number": "1086667583372",
+    "project_id": "gornaya-slanga",
+    "storage_bucket": "gornaya-slanga.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:1086667583372:android:a7fe6164087e6f057870a9",
         "android_client_info": {
-          "package_name": "com.gornayasalanga.gornaya_salanga"
+          "package_name": "com.gornayaslanga.app"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "placeholder-replace-with-firebase-console"
+          "current_key": "AIzaSyDlA-UOT9QRmsCzbPAz0slbOJZs0nJ1z74"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1086667583372:android:02d29a36bce3fb1c7870a9",
+        "android_client_info": {
+          "package_name": "com.gornayaslanga.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlA-UOT9QRmsCzbPAz0slbOJZs0nJ1z74"
         }
       ],
       "services": {

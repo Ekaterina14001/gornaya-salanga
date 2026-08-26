@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/storage/hive_boxes.dart';
+import '../../../../core/theme/salanga_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/install_app_banner.dart';
+import '../../../../shared/widgets/salanga_brand_header.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -74,7 +77,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final isLast = _currentPage == _pages.length - 1;
 
     return Scaffold(
+      backgroundColor: SalangaColors.cream,
       appBar: AppBar(
+        backgroundColor: SalangaColors.cream,
         actions: [
           TextButton(
             onPressed: _complete,
@@ -84,6 +89,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
       ),
       body: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: InstallAppBanner(compact: true),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: SalangaBrandHeader(compact: true),
+          ),
           Expanded(
             child: PageView.builder(
               controller: _controller,
@@ -96,7 +109,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(slide.icon, size: 96),
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: SalangaColors.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: SalangaColors.sand, width: 2),
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Image.asset(
+                          'assets/images/logo_mark.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                       const SizedBox(height: 32),
                       Text(
                         _text(l10n, slide.titleKey),
@@ -122,15 +148,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 Row(
                   children: List.generate(
                     _pages.length,
-                    (i) => Container(
+                    (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.only(right: 8),
-                      width: 8,
+                      width: i == _currentPage ? 18 : 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(4),
                         color: i == _currentPage
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline,
+                            ? SalangaColors.green
+                            : SalangaColors.border,
                       ),
                     ),
                   ),

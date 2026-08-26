@@ -92,6 +92,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get qrCode => 'QR-код';
 
   @override
+  String get bookRoom => 'Забронировать номер';
+
+  @override
+  String get installAppTitle => 'Установить приложение';
+
+  @override
+  String get installAppButton => 'Установить';
+
+  @override
+  String get installAppHint =>
+      'Добавьте на главный экран — так открывать курорт будет быстрее.';
+
+  @override
+  String get installAppIosHint =>
+      'Safari → Поделиться → «На экран Домой» → Добавить.';
+
+  @override
+  String get installAppAndroidHint =>
+      'Chrome → меню ⋮ → «Установить приложение» или «Добавить на главный экран».';
+
+  @override
   String get weather => 'Погода';
 
   @override

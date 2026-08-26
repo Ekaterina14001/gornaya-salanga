@@ -16,8 +16,31 @@ class ContentRepository {
   }
 
   Future<List<dynamic>> fetchServices({bool forceRefresh = false}) async {
-    final data = await _fetchListCached('services_cache', '/api/content/services', forceRefresh);
-    return data;
+    if (forceRefresh) {
+      await HiveBoxes.settings.delete('services_cache');
+    }
+    try {
+      final response = await _dio.get<dynamic>(
+        '/api/content/services',
+        queryParameters: forceRefresh
+            ? {'_': DateTime.now().millisecondsSinceEpoch}
+            : null,
+      );
+      final data = unwrapData(response.data);
+      final List<dynamic> items;
+      if (data is List) {
+        items = data;
+      } else if (data is Map && data['items'] is List) {
+        items = data['items'] as List<dynamic>;
+      } else {
+        items = [];
+      }
+      await _writeCache('services_cache', {'items': items});
+      return items;
+    } catch (_) {
+      final cached = await _readCache('services_cache', ignoreExpiry: true);
+      return (cached?['items'] as List<dynamic>?) ?? [];
+    }
   }
 
   Future<List<dynamic>> fetchTrails({bool forceRefresh = false}) async {
@@ -76,10 +99,11 @@ class ContentRepository {
   Future<List<dynamic>> _fetchListCached(
     String cacheKey,
     String path,
-    bool forceRefresh,
-  ) async {
+    bool forceRefresh, {
+    Duration ttl = _cacheTtl,
+  }) async {
     if (!forceRefresh) {
-      final cached = await _readCache(cacheKey);
+      final cached = await _readCache(cacheKey, ttl: ttl);
       if (cached != null && cached['items'] is List) {
         return cached['items'] as List<dynamic>;
       }
@@ -103,14 +127,18 @@ class ContentRepository {
     }
   }
 
-  Future<Map<String, dynamic>?> _readCache(String key, {bool ignoreExpiry = false}) async {
+  Future<Map<String, dynamic>?> _readCache(
+    String key, {
+    bool ignoreExpiry = false,
+    Duration ttl = _cacheTtl,
+  }) async {
     final raw = HiveBoxes.settings.get(key);
     if (raw is! Map) return null;
     if (!ignoreExpiry) {
       final fetchedAt = raw['fetchedAt'] as int?;
       if (fetchedAt != null) {
         final age = DateTime.now().millisecondsSinceEpoch - fetchedAt;
-        if (age > _cacheTtl.inMilliseconds) return null;
+        if (age > ttl.inMilliseconds) return null;
       }
     }
     return Map<String, dynamic>.from(raw['data'] as Map? ?? {});

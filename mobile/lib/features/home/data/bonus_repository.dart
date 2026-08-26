@@ -16,7 +16,7 @@ class BonusRepository {
 
   Future<BonusAccountSummary> fetchAccountSummary() async {
     final response = await _dio.get<Map<String, dynamic>>('/api/bonus/balance');
-    final data = unwrapData(response.data);
+    final data = unwrapDataMap(response.data);
     return BonusAccountSummary(
       balance: (data['balance'] as num?)?.toDouble() ?? 0,
       totalEarned: (data['totalEarned'] as num?)?.toDouble() ?? 0,
@@ -37,7 +37,7 @@ class BonusRepository {
         if (type != null && type.isNotEmpty) 'type': type,
       },
     );
-    final data = unwrapData(response.data);
+    final data = unwrapDataMap(response.data);
     final items = (data['items'] as List<dynamic>? ?? [])
         .map((e) => BonusTransaction.fromJson(e as Map<String, dynamic>))
         .toList();

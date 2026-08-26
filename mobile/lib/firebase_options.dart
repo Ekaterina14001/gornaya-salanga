@@ -2,39 +2,29 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 
-/// Замените значения после `flutterfire configure` или передайте --dart-define.
+/// Firebase project: gornaya-slanga (Google account).
+/// Service account for server push: backend/secrets/fcm-service-account.json
 class DefaultFirebaseOptions {
-  static const String apiKey = String.fromEnvironment(
-    'FIREBASE_API_KEY',
-    defaultValue: 'YOUR_API_KEY',
-  );
-  static const String appId = String.fromEnvironment(
-    'FIREBASE_APP_ID',
-    defaultValue: 'YOUR_APP_ID',
-  );
-  static const String messagingSenderId = String.fromEnvironment(
-    'FIREBASE_MESSAGING_SENDER_ID',
-    defaultValue: 'YOUR_SENDER_ID',
-  );
-  static const String projectId = String.fromEnvironment(
-    'FIREBASE_PROJECT_ID',
-    defaultValue: 'YOUR_PROJECT_ID',
-  );
-  static const String authDomain = String.fromEnvironment(
-    'FIREBASE_AUTH_DOMAIN',
-    defaultValue: 'YOUR_PROJECT_ID.firebaseapp.com',
-  );
-  static const String storageBucket = String.fromEnvironment(
-    'FIREBASE_STORAGE_BUCKET',
-    defaultValue: 'YOUR_PROJECT_ID.appspot.com',
-  );
+  DefaultFirebaseOptions._();
+
+  static const String apiKey = 'AIzaSyDlA-UOT9QRmsCzbPAz0slbOJZs0nJ1z74';
+  static const String appIdAndroid =
+      '1:1086667583372:android:02d29a36bce3fb1c7870a9';
+  static const String appIdWeb = '1:1086667583372:web:c702884271879f377870a9';
+  static const String messagingSenderId = '1086667583372';
+  static const String projectId = 'gornaya-slanga';
+  static const String authDomain = 'gornaya-slanga.firebaseapp.com';
+  static const String storageBucket = 'gornaya-slanga.firebasestorage.app';
+
+  /// Web Push VAPID key — Firebase Console → Cloud Messaging → Web Push certificates.
+  /// Optional for Android-only push testing.
   static const String vapidKey = String.fromEnvironment(
     'FIREBASE_VAPID_KEY',
     defaultValue: '',
   );
 
   static bool get isConfigured =>
-      apiKey.isNotEmpty && apiKey != 'YOUR_API_KEY' && projectId != 'YOUR_PROJECT_ID';
+      apiKey.isNotEmpty && projectId.isNotEmpty;
 
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -52,7 +42,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: apiKey,
-    appId: appId,
+    appId: appIdWeb,
     messagingSenderId: messagingSenderId,
     projectId: projectId,
     authDomain: authDomain,
@@ -61,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: apiKey,
-    appId: appId,
+    appId: appIdAndroid,
     messagingSenderId: messagingSenderId,
     projectId: projectId,
     storageBucket: storageBucket,
@@ -69,10 +59,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: apiKey,
-    appId: appId,
+    appId: '1:1086667583372:ios:00e3a8fdf48bc37e7870a9',
     messagingSenderId: messagingSenderId,
     projectId: projectId,
     storageBucket: storageBucket,
-    iosBundleId: 'com.gornayasalanga.gornayaSalanga',
+    iosBundleId: 'com.gornayaslanga.mobile',
   );
 }

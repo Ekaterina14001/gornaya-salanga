@@ -12,10 +12,12 @@ import (
 	"github.com/gornaya-salanga/backend/internal/config"
 	"github.com/gornaya-salanga/backend/internal/database"
 	"github.com/gornaya-salanga/backend/internal/handler"
+	"github.com/gornaya-salanga/backend/internal/email"
 	"github.com/gornaya-salanga/backend/internal/push"
 	"github.com/gornaya-salanga/backend/internal/repository"
 	"github.com/gornaya-salanga/backend/internal/router"
 	"github.com/gornaya-salanga/backend/internal/service"
+	"github.com/gornaya-salanga/backend/internal/sms"
 	jwtutil "github.com/gornaya-salanga/backend/pkg/jwt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -31,6 +33,10 @@ func main() {
 	}
 
 	gin.SetMode(cfg.GinMode)
+
+	if err := cfg.ValidateForProduction(); err != nil {
+		log.Fatal().Err(err).Msg("refusing to start with insecure production config")
+	}
 
 	ctx := context.Background()
 	pool, err := database.NewPool(ctx, cfg.DatabaseURL)
@@ -73,7 +79,17 @@ func main() {
 		pushSender = push.NoopSender{}
 	}
 
-	authSvc := service.NewAuthService(userRepo, bonusRepo, jwtManager, redisClient, cfg)
+	smsSender, err := sms.NewSender(cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("SMS sender init failed")
+	}
+
+	mailSender, err := email.NewSender(cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Email sender init failed")
+	}
+
+	authSvc := service.NewAuthService(userRepo, bonusRepo, jwtManager, redisClient, cfg, smsSender, mailSender)
 	userSvc := service.NewUserServiceWithMessages(userRepo, messageRepo)
 	bonusSvc := service.NewBonusService(bonusRepo, userRepo, cfg)
 	contentSvc := service.NewContentService(contentRepo, redisClient, cfg)

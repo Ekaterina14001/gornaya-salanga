@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/error_placeholder.dart';
+import '../../../../shared/widgets/install_app_banner.dart';
 import '../../../../shared/widgets/skeleton_loader.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/profile_repository.dart';
@@ -219,6 +220,13 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ],
             const Divider(),
+            if (showInstallAppMenuItem)
+              ListTile(
+                leading: const Icon(Icons.install_mobile),
+                title: Text(l10n.installAppTitle),
+                subtitle: Text(l10n.installAppHint),
+                onTap: () => showInstallAppDialog(context),
+              ),
             ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text('О приложении'),
