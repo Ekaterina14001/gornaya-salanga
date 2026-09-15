@@ -20,6 +20,9 @@ class SecureStorage {
   static const _refreshTokenKey = 'refresh_token';
   static const _deviceSecretKey = 'device_secret';
   static const _userIdKey = 'user_id';
+  static const _biometricEnabledKey = 'biometric_enabled';
+  static const _loginEmailKey = 'login_email';
+  static const _loginPasswordKey = 'login_password';
 
   Box<String> get _webBox => Hive.box<String>(HiveBoxes.tokenBox);
 
@@ -52,6 +55,39 @@ class SecureStorage {
     await _delete(_refreshTokenKey);
     await _delete(_deviceSecretKey);
     await _delete(_userIdKey);
+  }
+
+  Future<bool> isBiometricEnabled() async {
+    final value = await _read(_biometricEnabledKey);
+    return value == '1';
+  }
+
+  Future<void> setBiometricEnabled(bool enabled) async {
+    if (enabled) {
+      await _write(_biometricEnabledKey, '1');
+      return;
+    }
+    await _delete(_biometricEnabledKey);
+    await _delete(_loginEmailKey);
+    await _delete(_loginPasswordKey);
+  }
+
+  Future<void> saveLoginCredentials({
+    required String email,
+    required String password,
+  }) async {
+    await _write(_loginEmailKey, email);
+    await _write(_loginPasswordKey, password);
+    await _write(_biometricEnabledKey, '1');
+  }
+
+  Future<({String email, String password})?> getLoginCredentials() async {
+    final email = await _read(_loginEmailKey);
+    final password = await _read(_loginPasswordKey);
+    if (email == null || email.isEmpty || password == null || password.isEmpty) {
+      return null;
+    }
+    return (email: email, password: password);
   }
 
   Future<bool> hasTokens() async {

@@ -150,8 +150,49 @@ func (s *AdminService) ListTransactions(ctx context.Context, userID, txType stri
 	return &result, nil
 }
 
-func (s *AdminService) ListPOSKeys(ctx context.Context) ([]map[string]any, error) {
-	return s.pos.ListKeys(ctx)
+func (s *AdminService) ListPOSKeys(ctx context.Context) (map[string]any, error) {
+	dbKeys, err := s.pos.ListKeys(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if dbKeys == nil {
+		dbKeys = []map[string]any{}
+	}
+	serverKeys := make([]map[string]any, 0, len(s.cfg.PosAPIKeys))
+	for _, system := range []string{"Shelter", "Bars", "RKeeper"} {
+		key, ok := s.cfg.PosAPIKeys[system]
+		if !ok || key == "" {
+			continue
+		}
+		serverKeys = append(serverKeys, map[string]any{
+			"id":      "env-" + strings.ToLower(system),
+			"system":  system,
+			"apiKey":  key,
+			"source":  "server",
+			"active":  true,
+		})
+	}
+	companyID := strings.TrimSpace(s.cfg.UDSCompanyID)
+	if companyID == "" {
+		companyID = "1"
+	}
+	return map[string]any{
+		"apiUrl":          strings.TrimRight(s.cfg.PublicAPIURL, "/") + "/api/partner/v2",
+		"companyId":       companyID,
+		"timeoutSeconds":  15,
+		"endpoints":       posEndpoints(),
+		"serverKeys":      serverKeys,
+		"keys":            dbKeys,
+	}, nil
+}
+
+func posEndpoints() []map[string]string {
+	return []map[string]string{
+		{"method": "POST", "path": "/api/auth/qr/verify", "header": "X-API-Key"},
+		{"method": "POST", "path": "/api/bonus/earn", "header": "X-API-Key"},
+		{"method": "POST", "path": "/api/bonus/spend", "header": "X-API-Key"},
+		{"method": "GET", "path": "/api/external/user/{id}/bonus", "header": "X-API-Key"},
+	}
 }
 
 func (s *AdminService) CreatePOSKey(ctx context.Context, system string) (map[string]any, error) {
@@ -168,6 +209,7 @@ func (s *AdminService) CreatePOSKey(ctx context.Context, system string) (map[str
 	}
 	result["apiKey"] = apiKey
 	result["prefix"] = prefix
+	result["apiUrl"] = s.cfg.PublicAPIURL
 	return result, nil
 }
 

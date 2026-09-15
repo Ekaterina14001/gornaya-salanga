@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Горная Саланга — Eco Alpine Resort · Прототип</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest: #1a3328;
+      --forest-light: #2d4a3a;
+      --moss: #5c7a5a;
+      --stone: #f4f1ec;
+      --stone-dark: #e8e3db;
+      --ink: #141412;
+      --ink-muted: #5a5652;
+      --copper: #a86b42;
+      --copper-hover: #8f5734;
+      --snow: #fafaf8;
+      --white: #ffffff;
+      --overlay: rgba(20, 20, 18, 0.45);
+      --header-h: 72px;
+      --radius: 4px;
+      --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--snow);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img { display: block; max-width: 100%; height: auto; }
+
+    a { color: inherit; text-decoration: none; }
+
+    .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+
+    .container {
+      width: min(1200px, calc(100% - 48px));
+      margin-inline: auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 100;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      transition: background var(--transition), border-color var(--transition);
+      border-bottom: 1px solid transparent;
+    }
+
+    .header.scrolled {
+      background: rgba(244, 241, 236, 0.92);
+      backdrop-filter: blur(12px);
+      border-color: var(--stone-dark);
+    }
+
+    .header__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(1200px, calc(100% - 48px));
+      margin-inline: auto;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .logo__name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .logo__tag {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+
+    .header.scrolled .logo__name,
+    .header.scrolled .logo__tag { color: var(--ink); }
+
+    .header:not(.scrolled) .logo__name,
+    .header:not(.scrolled) .logo__tag { color: var(--white); }
+
+    .nav {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: opacity var(--transition);
+    }
+
+    .header:not(.scrolled) .nav a { color: var(--white); }
+    .header.scrolled .nav a { color: var(--ink-muted); }
+    .nav a:hover { opacity: 0.65; }
+
+    .header__actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .live-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      color: var(--white);
+      transition: border-color var(--transition), color var(--transition);
+    }
+
+    .header.scrolled .live-pill {
+      border-color: var(--stone-dark);
+      color: var(--ink-muted);
+    }
+
+    .live-pill__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6ecf8a;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition), border-color var(--transition);
+    }
+
+    .btn--primary {
+      background: var(--copper);
+      color: var(--white);
+    }
+
+    .btn--primary:hover { background: var(--copper-hover); }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+
+    .btn--ghost:hover { background: rgba(255,255,255,0.1); }
+
+    .header.scrolled .btn--ghost {
+      color: var(--ink);
+      border-color: var(--stone-dark);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+
+    .hero__bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: opacity 0.8s ease;
+    }
+
+    .hero__bg--winter {
+      background-image: url('https://images.unsplash.com/photo-1551524164-6cf77f7e7c8c?w=1920&q=80');
+      opacity: 1;
+    }
+
+    .hero__bg--summer {
+      background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80');
+      opacity: 0;
+    }
+
+    body[data-season="summer"] .hero__bg--winter { opacity: 0; }
+    body[data-season="summer"] .hero__bg--summer { opacity: 1; }
+
+    .hero__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(20, 20, 18, 0.75) 0%,
+        rgba(20, 20, 18, 0.25) 45%,
+        rgba(20, 20, 18, 0.15) 100%
+      );
+    }
+
+    .hero__content {
+      position: relative;
+      z-index: 2;
+      width: min(1200px, calc(100% - 48px));
+      margin-inline: auto;
+      padding: calc(var(--header-h) + 48px) 0 80px;
+    }
+
+    .season-toggle {
+      display: inline-flex;
+      padding: 4px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
+      border-radius: 999px;
+      margin-bottom: 32px;
+    }
+
+    .season-toggle button {
+      padding: 8px 20px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 999px;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .season-toggle button.active {
+      background: var(--white);
+      color: var(--ink);
+    }
+
+    .hero__eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 16px;
+    }
+
+    .hero__title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.8rem, 6vw, 4.5rem);
+      font-weight: 400;
+      line-height: 1.08;
+      color: var(--white);
+      max-width: 14ch;
+      margin-bottom: 24px;
+    }
+
+    .hero__title em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .hero__lead {
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.85);
+      max-width: 42ch;
+      margin-bottom: 40px;
+    }
+
+    .hero__cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+
+    .hero__stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: rgba(255,255,255,0.15);
+      border-radius: var(--radius);
+      overflow: hidden;
+      max-width: 640px;
+    }
+
+    .hero__stat {
+      background: rgba(20, 20, 18, 0.35);
+      backdrop-filter: blur(8px);
+      padding: 20px 24px;
+    }
+
+    .hero__stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .hero__stat-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+
+    /* ── Resort strip ── */
+    .strip {
+      background: var(--forest);
+      color: var(--white);
+      padding: 16px 0;
+    }
+
+    .strip__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .strip__item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+    }
+
+    .strip__item strong { font-weight: 600; }
+
+    .strip__divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* ── Sections ── */
+    section { padding: 96px 0; }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--moss);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 400;
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    .section-lead {
+      font-size: 1.05rem;
+      color: var(--ink-muted);
+      max-width: 52ch;
+      margin-bottom: 48px;
+    }
+
+    /* ── Dual experience ── */
+    .dual {
+      background: var(--stone);
+    }
+
+    .dual__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--stone-dark);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .dual__card {
+      position: relative;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 40px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform var(--transition);
+    }
+
+    .dual__card:hover { transform: scale(1.005); }
+
+    .dual__card-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.6s ease;
+    }
+
+    .dual__card:hover .dual__card-bg { transform: scale(1.04); }
+
+    .dual__card--ski .dual__card-bg {
+      background-image: url('https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=900&q=80');
+    }
+
+    .dual__card--eco .dual__card-bg {
+      background-image: url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&q=80');
+    }
+
+    .dual__card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(20,20,18,0.85) 0%, rgba(20,20,18,0.2) 60%);
+    }
+
+    .dual__card-content {
+      position: relative;
+      z-index: 1;
+      color: var(--white);
+    }
+
+    .dual__card-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+
+    .dual__card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+
+    .dual__card-text {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      max-width: 32ch;
+      margin-bottom: 20px;
+    }
+
+    .dual__card-link {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dual__card-link::after {
+      content: '→';
+      transition: transform var(--transition);
+    }
+
+    .dual__card:hover .dual__card-link::after { transform: translateX(4px); }
+
+    /* ── Rooms ── */
+    .rooms__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .room-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--stone-dark);
+      transition: border-color var(--transition);
+    }
+
+    .room-card:hover { border-color: var(--moss); }
+
+    .room-card__img {
+      aspect-ratio: 4/3;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .room-card__body { padding: 24px; }
+
+    .room-card__category {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--moss);
+      margin-bottom: 8px;
+    }
+
+    .room-card__name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .room-card__desc {
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+      margin-bottom: 16px;
+    }
+
+    .room-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .room-card__price {
+      font-size: 0.85rem;
+    }
+
+    .room-card__price strong {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .room-card__link {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    /* ── Activities ── */
+    .activities { background: var(--forest); color: var(--white); }
+
+    .activities .section-label { color: rgba(255,255,255,0.5); }
+    .activities .section-title { color: var(--white); }
+    .activities .section-lead { color: rgba(255,255,255,0.7); }
+
+    .activities__grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .activity {
+      padding: 32px 24px;
+      background: var(--forest-light);
+      transition: background var(--transition);
+    }
+
+    .activity:hover { background: rgba(45, 74, 58, 0.8); }
+
+    .activity__icon {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      opacity: 0.8;
+    }
+
+    .activity__name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+    }
+
+    .activity__desc {
+      font-size: 0.8rem;
+      opacity: 0.65;
+      line-height: 1.5;
+    }
+
+    /* ── Eco block ── */
+    .eco {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .eco__visual {
+      aspect-ratio: 4/5;
+      border-radius: var(--radius);
+      background: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80') center/cover;
+      position: relative;
+    }
+
+    .eco__badge {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      background: var(--white);
+      padding: 16px 20px;
+      border-radius: var(--radius);
+    }
+
+    .eco__badge-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--forest);
+      line-height: 1;
+    }
+
+    .eco__badge-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .eco__list {
+      list-style: none;
+      margin-top: 32px;
+    }
+
+    .eco__list li {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--stone-dark);
+      font-size: 0.95rem;
+    }
+
+    .eco__list li:first-child { border-top: 1px solid var(--stone-dark); }
+
+    .eco__list-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--moss);
+      min-width: 28px;
+    }
+
+    /* ── Dining ── */
+    .dining {
+      background: var(--stone);
+    }
+
+    .dining__layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .dining__img {
+      aspect-ratio: 16/10;
+      border-radius: var(--radius);
+      background: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80') center/cover;
+    }
+
+    .dining__venues {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .venue {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--stone-dark);
+    }
+
+    .venue__name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      margin-bottom: 4px;
+    }
+
+    .venue__type {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--moss);
+      margin-bottom: 8px;
+    }
+
+    .venue__desc {
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+    }
+
+    /* ── Booking CTA ── */
+    .cta-block {
+      background: var(--ink);
+      color: var(--white);
+      text-align: center;
+      padding: 80px 0;
+    }
+
+    .cta-block .section-title { color: var(--white); margin-bottom: 24px; }
+
+    .cta-block__lead {
+      color: rgba(255,255,255,0.7);
+      max-width: 48ch;
+      margin: 0 auto 40px;
+    }
+
+    .booking-bar {
+      display: flex;
+      max-width: 720px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .booking-bar__field {
+      flex: 1;
+      padding: 16px 20px;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .booking-bar__field:last-of-type { border-right: none; }
+
+    .booking-bar__label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 4px;
+    }
+
+    .booking-bar__value {
+      font-size: 0.9rem;
+    }
+
+    .booking-bar .btn {
+      border-radius: 0;
+      padding-inline: 32px;
+      white-space: nowrap;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: var(--forest);
+      color: rgba(255,255,255,0.75);
+      padding: 64px 0 32px;
+    }
+
+    .footer__grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer__brand .logo__name { color: var(--white); font-size: 1.5rem; }
+    .footer__brand .logo__tag { color: rgba(255,255,255,0.5); }
+
+    .footer__brand p {
+      margin-top: 16px;
+      font-size: 0.875rem;
+      max-width: 28ch;
+      line-height: 1.7;
+    }
+
+    .footer__col h4 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+
+    .footer__col ul { list-style: none; }
+
+    .footer__col li { margin-bottom: 10px; }
+
+    .footer__col a {
+      font-size: 0.875rem;
+      transition: color var(--transition);
+    }
+
+    .footer__col a:hover { color: var(--white); }
+
+    .footer__bottom {
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      opacity: 0.5;
+    }
+
+    /* ── Prototype badge ── */
+    .proto-badge {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      background: var(--copper);
+      color: var(--white);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .nav { display: none; }
+      .hero__stats { grid-template-columns: repeat(2, 1fr); }
+      .dual__grid,
+      .rooms__grid,
+      .activities__grid,
+      .eco,
+      .dining__layout,
+      .footer__grid { grid-template-columns: 1fr; }
+      .dual__card { min-height: 360px; }
+      .booking-bar { flex-direction: column; }
+      .booking-bar__field { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .booking-bar .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body data-season="winter">
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="#" class="logo">
+        <span class="logo__name">Горная Саланга</span>
+        <span class="logo__tag">Eco Alpine Resort</span>
+      </a>
+
+      <nav>
+        <ul class="nav">
+          <li><a href="#experience">Курорт</a></li>
+          <li><a href="#rooms">Проживание</a></li>
+          <li><a href="#activities">Активности</a></li>
+          <li><a href="#eco">Эко</a></li>
+          <li><a href="#dining">Рестораны</a></li>
+        </ul>
+      </nav>
+
+      <div class="header__actions">
+        <a href="#" class="live-pill">
+          <span class="live-pill__dot"></span>
+          <span>Камеры · −3°C</span>
+        </a>
+        <a href="#booking" class="btn btn--primary">Забронировать</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero__bg hero__bg--winter"></div>
+    <div class="hero__bg hero__bg--summer"></div>
+    <div class="hero__overlay"></div>
+
+    <div class="hero__content">
+      <div class="season-toggle" role="group" aria-label="Сезон">
+        <button type="button" class="active" data-season="winter">Зима · Горные лыжи</button>
+        <button type="button" data-season="summer">Лето · Эко-отдых</button>
+      </div>
+
+      <p class="hero__eyebrow">Сибирские горы · 600 м · Кузбасс</p>
+
+      <h1 class="hero__title">
+        Горы, которые <em>не заканчиваются</em> с сезоном
+      </h1>
+
+      <p class="hero__lead" id="hero-lead">
+        Горнолыжный курорт и эко-отель в сердце тайги. Альпийский комфорт без очередей — зимой на трассах, летом в тишине гор.
+      </p>
+
+      <div class="hero__cta">
+        <a href="#booking" class="btn btn--primary">Забронировать номер</a>
+        <a href="#experience" class="btn btn--ghost">Узнать о курорте</a>
+      </div>
+
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <div class="hero__stat-value">12</div>
+          <div class="hero__stat-label">трасс · км</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">600</div>
+          <div class="hero__stat-label">м · высота</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">11</div>
+          <div class="hero__stat-label">категорий номеров</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">4</div>
+          <div class="hero__stat-label">подъёмника</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live strip -->
+  <div class="strip">
+    <div class="container strip__inner">
+      <div class="strip__item">
+        <strong>Подъёмники:</strong> 3 из 4 работают
+      </div>
+      <div class="strip__divider"></div>
+      <div class="strip__item">
+        <strong>Трассы:</strong> 8 открыты · уровень снега 45 см
+      </div>
+      <div class="strip__divider"></div>
+      <div class="strip__item">
+        <strong>Погода:</strong> −3°C, ясно
+      </div>
+      <div class="strip__divider"></div>
+      <div class="strip__item">
+        <a href="#" style="opacity:0.8">Веб-камеры →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dual experience -->
+  <section class="dual" id="experience">
+    <div class="container">
+      <p class="section-label">Два сезона — один курорт</p>
+      <h2 class="section-title">Горнолыжка зимой.<br>Эко-восстановление летом.</h2>
+      <p class="section-lead">
+        Не база отдыха и не «деревня» — полноценный горный курорт с отельным сервисом, SPA-комплексом на озере и рестораном с панорамным видом.
+      </p>
+
+      <div class="dual__grid">
+        <article class="dual__card dual__card--ski">
+          <div class="dual__card-bg"></div>
+          <div class="dual__card-overlay"></div>
+          <div class="dual__card-content">
+            <p class="dual__card-tag">Зима · Ski</p>
+            <h3 class="dual__card-title">Горнолыжный курорт</h3>
+            <p class="dual__card-text">12 км трасс, прокат, школа, apres-ski бар GRADUS. Комфорт шале с видом на склон.</p>
+            <span class="dual__card-link">Трассы и цены</span>
+          </div>
+        </article>
+
+        <article class="dual__card dual__card--eco">
+          <div class="dual__card-bg"></div>
+          <div class="dual__card-overlay"></div>
+          <div class="dual__card-content">
+            <p class="dual__card-tag">Лето · Wellness</p>
+            <h3 class="dual__card-title">Эко-восстановление</h3>
+            <p class="dual__card-text">Озеро, банный комплекс, тропы в тайге, квадроциклы. Тишина гор вместо городского шума.</p>
+            <span class="dual__card-link">Летние программы</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rooms -->
+  <section id="rooms">
+    <div class="container">
+      <p class="section-label">Проживание</p>
+      <h2 class="section-title">Шале с отельным комфортом</h2>
+      <p class="section-lead">
+        11 категорий — от стандартных номеров до двухэтажных сьютов. Дерево, панорамные окна, вид на горы или озеро.
+      </p>
+
+      <div class="rooms__grid">
+        <article class="room-card">
+          <div class="room-card__img" style="background-image:url('https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80')"></div>
+          <div class="room-card__body">
+            <p class="room-card__category">Premium</p>
+            <h3 class="room-card__name">Романтик Шале</h3>
+            <p class="room-card__desc">Двухкомнатный дом с террасой и видом на тайгу. Отдельный вход.</p>
+            <div class="room-card__footer">
+              <p class="room-card__price">от <strong>18 350</strong> ₽/сутки</p>
+              <a href="#" class="room-card__link">Забронировать</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="room-card">
+          <div class="room-card__img" style="background-image:url('https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80')"></div>
+          <div class="room-card__body">
+            <p class="room-card__category">Comfort</p>
+            <h3 class="room-card__name">Стандарт+</h3>
+            <p class="room-card__desc">Балкон, французское окно, вид на горнолыжные трассы.</p>
+            <div class="room-card__footer">
+              <p class="room-card__price">от <strong>12 600</strong> ₽/сутки</p>
+              <a href="#" class="room-card__link">Забронировать</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="room-card">
+          <div class="room-card__img" style="background-image:url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80')"></div>
+          <div class="room-card__body">
+            <p class="room-card__category">Suite</p>
+            <h3 class="room-card__name">Люкс</h3>
+            <p class="room-card__desc">Две комнаты: спальня и гостиная. Для семей и пар.</p>
+            <div class="room-card__footer">
+              <p class="room-card__price">от <strong>17 200</strong> ₽/сутки</p>
+              <a href="#" class="room-card__link">Забронировать</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Activities -->
+  <section class="activities" id="activities">
+    <div class="container">
+      <p class="section-label">На курорте</p>
+      <h2 class="section-title">Активности на любой сезон</h2>
+      <p class="section-lead" style="color:rgba(255,255,255,0.7)">
+        От первого спуска до вечернего парения в бане — всё на территории курорта.
+      </p>
+
+      <div class="activities__grid">
+        <div class="activity">
+          <div class="activity__icon">⛷</div>
+          <h3 class="activity__name">Горные лыжи</h3>
+          <p class="activity__desc">12 км трасс, 4 подъёмника, прокат и школа</p>
+        </div>
+        <div class="activity">
+          <div class="activity__icon">🧖</div>
+          <h3 class="activity__name">SPA на озере</h3>
+          <p class="activity__desc">Банный комплекс, фитосауна, купель</p>
+        </div>
+        <div class="activity">
+          <div class="activity__icon">🍽</div>
+          <h3 class="activity__name">Ресторан</h3>
+          <p class="activity__desc">«Брудершафт» — вид на горы, местная кухня</p>
+        </div>
+        <div class="activity">
+          <div class="activity__icon">🏔</div>
+          <h3 class="activity__name">Тайга</h3>
+          <p class="activity__desc">Квадроциклы, рыбалка, терренкур, снегоходы</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Eco -->
+  <section id="eco">
+    <div class="container eco">
+      <div class="eco__visual">
+        <div class="eco__badge">
+          <div class="eco__badge-value">600 м</div>
+          <div class="eco__badge-label">над уровнем моря</div>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label">Эко-подход</p>
+        <h2 class="section-title">Природа — не декор,<br>а часть опыта</h2>
+        <p class="section-lead">
+          Курорт в окружении заповедной тайги. Мягкий климат без изнуряющей жары, чистый воздух и минимальное воздействие на экосистему.
+        </p>
+
+        <ul class="eco__list">
+          <li>
+            <span class="eco__list-num">01</span>
+            <span>Территория в окружении Белогорского лесничества — 50 км от асфальта, 100% тишины</span>
+          </li>
+          <li>
+            <span class="eco__list-num">02</span>
+            <span>Банный комплекс на озере — вода, пар и тайга без spa-пафоса</span>
+          </li>
+          <li>
+            <span class="eco__list-num">03</span>
+            <span>«Активное восстановление» — профилактика выгорания, а не медицинская реабилитация</span>
+          </li>
+          <li>
+            <span class="eco__list-num">04</span>
+            <span>Маршруты без толп — терренкур, квадроциклы, рыбалка в собственном темпе</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dining -->
+  <section class="dining" id="dining">
+    <div class="container dining__layout">
+      <div class="dining__img"></div>
+      <div>
+        <p class="section-label">Гастрономия</p>
+        <h2 class="section-title">Еда с видом<br>на горы</h2>
+        <p class="section-lead">
+          Двухразовое питание включено в горнолыжные туры. Ресторан с панорамными окнами — не столовая базы отдыха.
+        </p>
+
+        <div class="dining__venues">
+          <article class="venue">
+            <p class="venue__type">Fine dining</p>
+            <h3 class="venue__name">Ресторан «Брудершафт»</h3>
+            <p class="venue__desc">Завтраки с видом на зелёные горы летом, ужины после катания зимой.</p>
+          </article>
+          <article class="venue">
+            <p class="venue__type">Après-ski</p>
+            <h3 class="venue__name">Бар GRADUS</h3>
+            <p class="venue__desc">Каждый день после склонов, по выходным — живая программа и DJ.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking CTA -->
+  <section class="cta-block" id="booking">
+    <div class="container">
+      <p class="section-label" style="color:rgba(255,255,255,0.5)">Бронирование</p>
+      <h2 class="section-title">Ваш отдых в горах<br>начинается здесь</h2>
+      <p class="cta-block__lead">
+        Выберите даты — мы подберём номер. Дорога последние 50 км по грунтовке — часть приключения.
+      </p>
+
+      <div class="booking-bar">
+        <div class="booking-bar__field">
+          <div class="booking-bar__label">Заезд</div>
+          <div class="booking-bar__value">Выберите дату</div>
+        </div>
+        <div class="booking-bar__field">
+          <div class="booking-bar__label">Выезд</div>
+          <div class="booking-bar__value">Выберите дату</div>
+        </div>
+        <div class="booking-bar__field">
+          <div class="booking-bar__label">Гости</div>
+          <div class="booking-bar__value">2 взрослых</div>
+        </div>
+        <button type="button" class="btn btn--primary">Подобрать номер</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <div class="logo">
+            <span class="logo__name">Горная Саланга</span>
+            <span class="logo__tag">Eco Alpine Resort</span>
+          </div>
+          <p>Горный эко-курорт в сердце сибирской тайги. Кемеровская область, п. Белогорск.</p>
+        </div>
+
+        <div class="footer__col">
+          <h4>Курорт</h4>
+          <ul>
+            <li><a href="#">Трассы и подъёмники</a></li>
+            <li><a href="#">Прокат</a></li>
+            <li><a href="#">Летний отдых</a></li>
+            <li><a href="#">Веб-камеры</a></li>
+          </ul>
+        </div>
+
+        <div class="footer__col">
+          <h4>Проживание</h4>
+          <ul>
+            <li><a href="#">Каталог номеров</a></li>
+            <li><a href="#">Цены</a></li>
+            <li><a href="#">Спецпредложения</a></li>
+            <li><a href="#">Сертификаты</a></li>
+          </ul>
+        </div>
+
+        <div class="footer__col">
+          <h4>Контакты</h4>
+          <ul>
+            <li><a href="tel:+73912277006">+7 (391) 22-77-006</a></li>
+            <li><a href="mailto:info@salanga.ru">info@salanga.ru</a></li>
+            <li><a href="#">Как добраться</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <span>© 2026 Горная Саланга</span>
+        <span>Прототип нового сайта · не для публикации</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="proto-badge">Прототип v1</div>
+
+  <script>
+    const header = document.getElementById('header');
+    const heroLead = document.getElementById('hero-lead');
+    const seasonBtns = document.querySelectorAll('.season-toggle button');
+
+    const leads = {
+      winter: 'Горнолыжный курорт и эко-отель в сердце тайги. Альпийский комфорт без очередей — зимой на трассах, летом в тишине гор.',
+      summer: 'Летом горы не заканчиваются — они становятся зелёными. Озеро, бани, тропы и тишина настолько громкая, что сначала пугает.'
+    };
+
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    seasonBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const season = btn.dataset.season;
+        document.body.dataset.season = season;
+        seasonBtns.forEach(b => b.classList.toggle('active', b === btn));
+        heroLead.textContent = leads[season];
+      });
+    });
+  </script>
+</body>
+</html>

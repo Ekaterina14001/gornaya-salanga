@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/auth/biometric_prompt.dart';
+
 import '../../../home/data/bonus_repository.dart';
+import '../../../notifications/data/notifications_repository.dart';
 import '../../../profile/data/profile_repository.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/book_room_button.dart';
@@ -19,15 +22,20 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _bonusRepository = BonusRepository();
   final _profileRepository = ProfileRepository();
+  final _notificationsRepository = NotificationsRepository();
   int? _balance;
   String _firstName = '';
   String? _error;
   bool _loading = true;
+  int _unreadNotifications = 0;
 
   @override
   void initState() {
     super.initState();
     _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) maybeOfferBiometricLogin(context);
+    });
   }
 
   Future<void> _load() async {
@@ -36,15 +44,20 @@ class _HomePageState extends State<HomePage> {
       _error = null;
     });
     try {
-      final results = await Future.wait([
-        _bonusRepository.fetchBalance(),
-        _profileRepository.fetchProfile(),
-      ]);
+      final balanceFuture = _bonusRepository.fetchBalance();
+      final profileFuture = _profileRepository.fetchProfile();
+      final unreadFuture = _notificationsRepository.unreadCount();
+      final balance = await balanceFuture;
+      final profile = await profileFuture;
+      var unread = 0;
+      try {
+        unread = await unreadFuture;
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
-        _balance = results[0] as int;
-        final profile = results[1] as Map<String, dynamic>;
+        _balance = balance;
         _firstName = profile['firstName'] as String? ?? '';
+        _unreadNotifications = unread;
         _loading = false;
       });
     } catch (e) {
@@ -138,7 +151,15 @@ class _HomePageState extends State<HomePage> {
             _QuickLink(
               icon: Icons.notifications_outlined,
               title: l10n.notifications,
-              onTap: () => context.push('/notifications'),
+              badgeCount: _unreadNotifications,
+              onTap: () async {
+                await context.push('/notifications');
+                if (!mounted) return;
+                try {
+                  final unread = await _notificationsRepository.unreadCount();
+                  if (mounted) setState(() => _unreadNotifications = unread);
+                } catch (_) {}
+              },
             ),
             _QuickLink(
               icon: Icons.contact_mail_outlined,
@@ -157,22 +178,36 @@ class _QuickLink extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final String title;
   final VoidCallback onTap;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasUnread = badgeCount > 0;
     return Card(
-      color: Theme.of(context).colorScheme.surface,
+      color: hasUnread ? colorScheme.primaryContainer.withValues(alpha: 0.45) : colorScheme.surface,
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        title: Text(title),
+        leading: Badge(
+          isLabelVisible: hasUnread,
+          label: Text(badgeCount > 99 ? '99+' : '$badgeCount'),
+          child: Icon(
+            hasUnread ? Icons.notifications_active : icon,
+            color: colorScheme.primary,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w400),
+        ),
         trailing: Icon(
           Icons.chevron_right,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: colorScheme.onSurfaceVariant,
         ),
         onTap: onTap,
       ),

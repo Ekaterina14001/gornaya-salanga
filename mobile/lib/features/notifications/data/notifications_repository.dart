@@ -18,6 +18,11 @@ class NotificationsRepository {
     return [];
   }
 
+  Future<int> unreadCount() async {
+    final items = await fetchNotifications();
+    return items.where((item) => item['read'] != true).length;
+  }
+
   Future<void> markRead(String id) async {
     await _dio.patch<void>('/api/notifications/$id/read');
   }

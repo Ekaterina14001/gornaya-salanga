@@ -96,8 +96,10 @@ func main() {
 	notifSvc := service.NewNotificationService(notifRepo, pushSender)
 	adminSvc := service.NewAdminService(userRepo, bonusRepo, contentRepo, notifRepo, notifSvc, messageRepo, posRepo, cfg)
 	posSvc := service.NewPOSService(bonusRepo, userRepo, posRepo, cfg)
+	udsRepo := repository.NewUDSRepository(pool)
+	udsSvc := service.NewUDSService(bonusRepo, userRepo, udsRepo, authSvc, cfg)
 
-	h := handler.NewHandler(authSvc, userSvc, bonusSvc, contentSvc, notifSvc, adminSvc, posSvc, cfg, jwtManager, redisClient)
+	h := handler.NewHandler(authSvc, userSvc, bonusSvc, contentSvc, notifSvc, adminSvc, posSvc, udsSvc, cfg, jwtManager, redisClient)
 
 	engine := router.Setup(cfg, jwtManager, h, posRepo)
 

@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Горная Саланга — Рассказ · Прототип 1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;1,7..72,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest: #182820;
+      --forest-soft: #243830;
+      --moss: #4d6b52;
+      --fog: #e9e5df;
+      --mist: #f6f4f0;
+      --ink: #121110;
+      --ink-soft: #4a4642;
+      --ink-faint: #8a8480;
+      --amber: #c4a574;
+      --white: #ffffff;
+      --header-h: 64px;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Literata', Georgia, serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--ink);
+      background: var(--mist);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .display {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 400;
+    }
+
+    /* ── Minimal header ── */
+    .header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 100;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .header__inner {
+      width: min(1100px, calc(100% - 40px));
+      margin-inline: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: auto;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--white);
+      mix-blend-mode: difference;
+    }
+
+    .header__book {
+      font-family: 'Literata', serif;
+      font-size: 0.75rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--white);
+      mix-blend-mode: difference;
+      opacity: 0.85;
+      transition: opacity 0.3s var(--ease);
+    }
+
+    .header__book:hover { opacity: 1; }
+
+    /* ── Day progress nav ── */
+    .day-nav {
+      position: fixed;
+      right: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .day-nav a {
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+      opacity: 0.35;
+      transition: all 0.35s var(--ease);
+    }
+
+    .day-nav a.active,
+    .day-nav a:hover {
+      opacity: 1;
+      background: var(--moss);
+      transform: scale(1.3);
+    }
+
+    .day-nav a[title]:hover::before {
+      content: attr(title);
+      position: absolute;
+      right: 20px;
+      white-space: nowrap;
+      font-family: 'Literata', serif;
+      font-size: 0.7rem;
+      color: var(--ink-soft);
+      opacity: 0;
+      animation: fadeIn 0.2s forwards;
+    }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* ── Intro ── */
+    .intro {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .intro__bg {
+      position: absolute;
+      inset: 0;
+      background: url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq7jBqGIcD_4_/4ONJd1TfsAC6ZWZ9qpf4_2xYvOXCxzqz/aBp39U09MmKwuejSJcPLfNseDaYmkPTt/URxlGB-aeWhvs31xNXmaQZEizPzV5i1j/Afhm7i8-1zGlNUW7u-BEniy8bpFjxwq2/zMD7upo4dSNKEp4Z0ZoZ2VAq42-dOcjm/02l5zpCiIf2O1MSdNMek315TW5in_A_I/w2G1yePsuJKNhvP5DDIvXmFGrgZiDcEZ/8TUgoZi18TKRiDkzNeuODFbMmmkQ4FlE/RuLa8LIdf3g.jpg') center/cover;
+      transform: scale(1.02);
+    }
+
+    .intro__veil {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(18, 17, 16, 0.35) 0%,
+        rgba(18, 17, 16, 0.55) 50%,
+        rgba(18, 17, 16, 0.7) 100%
+      );
+    }
+
+    .intro__content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      color: var(--white);
+      padding: 0 24px;
+      max-width: 680px;
+    }
+
+    .intro__hint {
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.65;
+      margin-bottom: 32px;
+    }
+
+    .intro__title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+      font-weight: 400;
+      line-height: 1.15;
+      margin-bottom: 28px;
+    }
+
+    .intro__sub {
+      font-size: 1.05rem;
+      font-weight: 300;
+      opacity: 0.85;
+      line-height: 1.7;
+      font-style: italic;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ── Manifesto ── */
+    .manifesto {
+      padding: clamp(100px, 14vh, 160px) 24px;
+      text-align: center;
+      background: var(--mist);
+    }
+
+    .manifesto__inner {
+      max-width: 720px;
+      margin-inline: auto;
+    }
+
+    .manifesto__text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 400;
+      line-height: 1.35;
+      color: var(--ink);
+    }
+
+    .manifesto__text em {
+      font-style: italic;
+      color: var(--moss);
+    }
+
+    .manifesto__divider {
+      width: 48px;
+      height: 1px;
+      background: var(--amber);
+      margin: 48px auto 0;
+    }
+
+    /* ── Chapter (day scene) ── */
+    .chapter {
+      position: relative;
+    }
+
+    .chapter__hero {
+      position: relative;
+      min-height: 85vh;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+
+    .chapter__hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .chapter__hero-veil {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(18, 17, 16, 0.82) 0%,
+        rgba(18, 17, 16, 0.25) 55%,
+        rgba(18, 17, 16, 0.1) 100%
+      );
+    }
+
+    .chapter__hero-content {
+      position: relative;
+      z-index: 2;
+      width: min(900px, calc(100% - 48px));
+      margin: 0 auto 72px;
+      color: var(--white);
+    }
+
+    .chapter__time {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      margin-bottom: 20px;
+    }
+
+    .chapter__question {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 400;
+      line-height: 1.12;
+      margin-bottom: 28px;
+    }
+
+    .chapter__atmosphere {
+      font-size: 1.05rem;
+      font-weight: 300;
+      line-height: 1.8;
+      opacity: 0.88;
+      max-width: 52ch;
+    }
+
+    /* ── Chapter body (present → practical) ── */
+    .chapter__body {
+      background: var(--mist);
+      padding: 80px 24px 100px;
+    }
+
+    .chapter__body--dark {
+      background: var(--forest);
+      color: rgba(255,255,255,0.88);
+    }
+
+    .chapter__body-inner {
+      width: min(900px, 100%);
+      margin-inline: auto;
+    }
+
+    .chapter__present {
+      margin-bottom: 64px;
+    }
+
+    .chapter__present p {
+      font-size: 1.1rem;
+      line-height: 1.85;
+      color: var(--ink-soft);
+      max-width: 58ch;
+    }
+
+    .chapter__body--dark .chapter__present p {
+      color: rgba(255,255,255,0.72);
+    }
+
+    .chapter__present p + p {
+      margin-top: 1.4em;
+    }
+
+    .chapter__practical-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 24px;
+      padding-top: 48px;
+      border-top: 1px solid var(--fog);
+    }
+
+    .chapter__body--dark .chapter__practical-label {
+      color: rgba(255,255,255,0.4);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    /* Cards for practical info */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--fog);
+      overflow: hidden;
+      transition: border-color 0.3s var(--ease);
+    }
+
+    .card:hover { border-color: var(--moss); }
+
+    .chapter__body--dark .card {
+      background: var(--forest-soft);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .chapter__body--dark .card:hover {
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    .card__img {
+      aspect-ratio: 16/10;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .card__body { padding: 22px 24px 26px; }
+
+    .card__name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      margin-bottom: 6px;
+    }
+
+    .card__desc {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      margin-bottom: 16px;
+    }
+
+    .chapter__body--dark .card__desc {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .card__link {
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      color: var(--moss);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chapter__body--dark .card__link {
+      color: var(--amber);
+    }
+
+    .card__link::after {
+      content: '→';
+      transition: transform 0.25s var(--ease);
+    }
+
+    .card:hover .card__link::after { transform: translateX(3px); }
+
+    /* Inline list (activities, dining) */
+    .flow-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .flow-list li {
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 24px;
+      align-items: baseline;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--fog);
+    }
+
+    .chapter__body--dark .flow-list li {
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .flow-list__tag {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .chapter__body--dark .flow-list__tag {
+      color: rgba(255,255,255,0.45);
+    }
+
+    .flow-list__text {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--ink-soft);
+    }
+
+    .chapter__body--dark .flow-list__text {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .flow-list__link {
+      font-size: 0.75rem;
+      color: var(--moss);
+      white-space: nowrap;
+    }
+
+    .chapter__body--dark .flow-list__link {
+      color: var(--amber);
+    }
+
+    /* Evening / nature block — more poetic, less cards */
+    .poem-block {
+      max-width: 52ch;
+    }
+
+    .poem-block p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      line-height: 1.7;
+      color: var(--ink-soft);
+      font-style: italic;
+    }
+
+    .chapter__body--dark .poem-block p {
+      color: rgba(255,255,255,0.75);
+    }
+
+    .nature-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 56px;
+      flex-wrap: wrap;
+    }
+
+    .nature-stats dt {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      color: var(--moss);
+      line-height: 1;
+    }
+
+    .chapter__body--dark .nature-stats dt {
+      color: var(--amber);
+    }
+
+    .nature-stats dd {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-top: 6px;
+    }
+
+    .chapter__body--dark .nature-stats dd {
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* ── Transition between chapters ── */
+    .bridge {
+      padding: 64px 24px;
+      text-align: center;
+      background: var(--fog);
+    }
+
+    .bridge p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-style: italic;
+      color: var(--ink-faint);
+      max-width: 36ch;
+      margin-inline: auto;
+    }
+
+    /* ── Closing — practical only at the end ── */
+    .closing {
+      background: var(--forest);
+      color: rgba(255,255,255,0.85);
+      padding: 100px 24px 80px;
+      text-align: center;
+    }
+
+    .closing__inner {
+      max-width: 640px;
+      margin-inline: auto;
+    }
+
+    .closing__label {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      margin-bottom: 20px;
+    }
+
+    .closing__title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 400;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      color: var(--white);
+    }
+
+    .closing__text {
+      font-size: 0.95rem;
+      line-height: 1.75;
+      opacity: 0.7;
+      margin-bottom: 48px;
+    }
+
+    .closing__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 64px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 14px 28px;
+      font-family: 'Literata', serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    .btn--fill {
+      background: var(--amber);
+      color: var(--forest);
+      border-color: var(--amber);
+    }
+
+    .btn--fill:hover {
+      background: transparent;
+      color: var(--amber);
+    }
+
+    .btn--line {
+      background: transparent;
+      color: rgba(255,255,255,0.8);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .btn--line:hover {
+      border-color: rgba(255,255,255,0.6);
+      color: var(--white);
+    }
+
+    .closing__links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px 40px;
+      padding-top: 48px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .closing__links a {
+      font-size: 0.8rem;
+      opacity: 0.55;
+      transition: opacity 0.25s;
+    }
+
+    .closing__links a:hover { opacity: 1; }
+
+    .footer-note {
+      margin-top: 48px;
+      font-size: 0.7rem;
+      opacity: 0.35;
+    }
+
+    .proto-badge {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 200;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      background: rgba(255,255,255,0.9);
+      padding: 8px 12px;
+    }
+
+    @media (max-width: 768px) {
+      .day-nav { display: none; }
+      .flow-list li {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .chapter__hero { min-height: 70vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header__inner">
+      <a href="#" class="logo">Горная Саланга</a>
+      <a href="#closing" class="header__book">Забронировать</a>
+    </div>
+  </header>
+
+  <nav class="day-nav" aria-label="Ход дня">
+    <a href="#intro" title="Начало" class="active" data-section="intro"></a>
+    <a href="#manifesto" title="О дне" data-section="manifesto"></a>
+    <a href="#morning" title="Пробуждение" data-section="morning"></a>
+    <a href="#day" title="Утро" data-section="day"></a>
+    <a href="#table" title="Стол" data-section="table"></a>
+    <a href="#after" title="После спуска" data-section="after"></a>
+    <a href="#night" title="Вечер" data-section="night"></a>
+    <a href="#closing" title="Поездка" data-section="closing"></a>
+  </nav>
+
+  <!-- Intro: invitation, not selling -->
+  <section class="intro" id="intro">
+    <div class="intro__bg"></div>
+    <div class="intro__veil"></div>
+    <div class="intro__content">
+      <p class="intro__hint">Горный эко-курорт · Сибирь</p>
+      <h1 class="intro__title">Представьте себе<br>несколько дней здесь</h1>
+      <p class="intro__sub">Не каталог услуг и не расписание — просто попробуйте почувствовать, каково это</p>
+    </div>
+    <p class="scroll-hint">Листайте вниз</p>
+  </section>
+
+  <!-- Central mood phrase -->
+  <section class="manifesto" id="manifesto">
+    <div class="manifesto__inner">
+      <p class="manifesto__text">
+        Здесь не нужно никуда ехать.<br>
+        День просто <em>постепенно перетекает</em><br>
+        из одного занятия в другое.
+      </p>
+      <div class="manifesto__divider"></div>
+    </div>
+  </section>
+
+  <!-- Chapter 1: Where will you wake up? -->
+  <article class="chapter" id="morning">
+    <div class="chapter__hero">
+      <div class="chapter__hero-bg" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq7RU9maVQWKr/YumAxKbC0GiD28JmHv8Ha2bmbiQ4m7_8/y3nmDtkC-eJpg5CD4g351sJT4KEGz-Be/soALFFUENVR4qiKPmcH8vNdEEag_603a/9jwJaefr2l3BwKtGPL9W5A_DV6czSpVm/1h54mi_Zx2ec7ZMQcoV8J5wZmzYkPyFl/53a_MfGuQ2g0t1RZgaY5n6wkpPA9BeZ1/OCtuIVzqW4-v7p24ARphZ6wNEb0YlElf/ybnEl8THZY4dOsGrdjbQvTw6UumQIBvi/Wv790ecP3ZY.jpg')"></div>
+      <div class="chapter__hero-veil"></div>
+      <div class="chapter__hero-content">
+        <p class="chapter__time">Раннее утро</p>
+        <h2 class="chapter__question">Где вы будете<br>просыпаться?</h2>
+        <p class="chapter__atmosphere">
+          Сначала — тишина. Потом свет сквозь деревянную раму. Где-то за окном — тайга, а не парковка и не соседний корпус.
+        </p>
+      </div>
+    </div>
+
+    <div class="chapter__body">
+      <div class="chapter__body-inner">
+        <div class="chapter__present">
+          <p>Утро в Саланге начинается не с будильника, а с пространства. Шале с террасой, номер с балконом на склон, двухкомнатный сьют с видом на озеро — это не «категории размещения», а разные способы проснуться в горах.</p>
+          <p>Вы не выбираете «удобства» — вы выбираете, каким будет ваше утро: в тишине отдельного дома, с видом на трассы или с чашкой чая на веранде, пока тайга ещё не проснулась.</p>
+        </div>
+
+        <p class="chapter__practical-label">Варианты проживания</p>
+        <div class="cards">
+          <article class="card">
+            <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq9dDs3-OrJdw/mrNNP4j-7L6Pl0Fzjwd0bTLXG59Hxxn-/Y55V9eb4LmyGNGmIwAqkRZgxAGD7qOca/C4QnTtNOE-umglXy5cu7h0u0Ihn9CIzu/UA299BURaayhugYnVIVSYADDGTyGTEQN/c1ahQr-G5HEVTqMx_7rCunmhBn9C_mGo/xvK3Kp-iEPB2VsDSEl3Y7IXmGFfYBmt6/sT2rBT97Dljb3SsuhtkIcR6r17shSLct/jrkUCCuibc-TMJV-iRv0cMNQ-CklrC0S/hd6C9OYQAD8.jpg')"></div>
+            <div class="card__body">
+              <h3 class="card__name">Романтик Шале</h3>
+              <p class="card__desc">Отдельный дом, терраса, две комнаты. Утро в полной тишине.</p>
+              <a href="#" class="card__link">Подробнее о номере</a>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq0XKDsNtte8O/JdVs01BCye_lQRGLITYYhr6-Ku04a0Z1/fuqduxH-5IH8zWblRsnZxZnbZhZsEuV-/pjxxe4B9LQWMlVUsFZzLtaOIhSdsHHWW/PaYgHmV_HUq345x8D8Vp9i6RXDwt7sPW/nEFjt7vc8tu9BOVe9BIqk0oyB_eLT_a3/eWjEUw-lvuVM8lMRqXwQuy1hJfXk71tT/N9E2e9WetCVOqMsIGM7GXJdqjUWxbL4t/kUNveUi3qmXVoYAeRWosaZlKHYd6OCw5/aQYp-zO0q48.jpg')"></div>
+            <div class="card__body">
+              <h3 class="card__name">Стандарт+</h3>
+              <p class="card__desc">Балкон, вид на горнолыжные трассы. Проснуться и сразу увидеть склон.</p>
+              <a href="#" class="card__link">Подробнее о номере</a>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdqxcDIVThF44L/hDR-iMxgDEPzxd7tnHDU8JroPGR_Po_1/uLQdTAfQXs66KeMo6UYj5zQ0D4PimZRp/OdkkNsaLS_C6L-YX4WJEVDgo54tsipfv/BoY2xsgiNunA5qYDgzdMXUuYWSH2piyq/J776svBNPO0sjcOR5diNuxAwjG2nH_ax/r6HiVjXGmYQsfkoO54DCybSNNjI6AFac/E5X5Vqpe3NTKMn4SpoZYZAZTq9Z6K9pG/PmfZ6bkdnZsrwy-BF_6eRVhzDDOIp5Iy/_RAaIpRegqw.jpg')"></div>
+            <div class="card__body">
+              <h3 class="card__name">Люкс</h3>
+              <p class="card__desc">Спальня и гостиная. Пространство для семьи или пары.</p>
+              <a href="#" class="card__link">Подробнее о номере</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <div class="bridge">
+    <p>А дальше — день сам находит, чем заняться</p>
+  </div>
+
+  <!-- Chapter 2: Where will you go in the morning? -->
+  <article class="chapter" id="day">
+    <div class="chapter__hero">
+      <div class="chapter__hero-bg" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq4jYMX5XD6au/Byz9m_ne5iA_MEb1kkFH_iqXJkOzpBkH/WJYLwPQWRfEzh4KsKczzsqGu0HpDcYDD/lEQnzHnljr2gfNLo_lM8aOuIQni8hSgk/tFo5WCP-ysqf0Bqv-fwNwGn6yPibA9g6/hk1IawzKiI5xs9XhtfbWFUmeqvcUk4NN/XI4NjrJROQLwMsHaGNG8bJRbIwwDxwHj/ffJhiuH7VRmiK_TmimTL5RVrljLE4Lbg/-rBmE7idT0EiLjt1UCLVU9fyOWNRgPUx/C3WZDirczQo.jpg')"></div>
+      <div class="chapter__hero-veil"></div>
+      <div class="chapter__hero-content">
+        <p class="chapter__time">Утро · день</p>
+        <h2 class="chapter__question">Куда вы пойдёте<br>утром?</h2>
+        <p class="chapter__atmosphere">
+          На склон — или по тропе. На лыжах — или просто гулять. Саланга не только про катание. Это про то, куда ведёт вас утро.
+        </p>
+      </div>
+    </div>
+
+    <div class="chapter__body">
+      <div class="chapter__body-inner">
+        <div class="chapter__present">
+          <p>Зимой — 12 километров трасс и четыре подъёмника в нескольких минутах от номера. Летом — те же горы, только зелёные: терренкур, квадроциклы, рыбалка на озере. Никаких автобусов до подъёмника и никаких «экскурсий по расписанию» — вы просто выходите и идёте туда, куда хочется.</p>
+        </div>
+
+        <p class="chapter__practical-label">Чем занять утро и день</p>
+        <ul class="flow-list">
+          <li>
+            <span class="flow-list__tag">Зима</span>
+            <span class="flow-list__text">Горные лыжи и сноуборд — 12 км трасс, прокат, школа, 4 подъёмника</span>
+            <a href="#" class="flow-list__link">Трассы →</a>
+          </li>
+          <li>
+            <span class="flow-list__tag">Лето</span>
+            <span class="flow-list__text">Тропы терренкура, прогулки в тайге, йога на траве</span>
+            <a href="#" class="flow-list__link">Маршруты →</a>
+          </li>
+          <li>
+            <span class="flow-list__tag">Круглый год</span>
+            <span class="flow-list__text">Квадроциклы, рыбалка, снегоходы зимой</span>
+            <a href="#" class="flow-list__link">Активности →</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <div class="bridge">
+    <p>К обеду вы уже проголодались — и это тоже часть дня</p>
+  </div>
+
+  <!-- Chapter 3: What's on your table? -->
+  <article class="chapter" id="table">
+    <div class="chapter__hero">
+      <div class="chapter__hero-bg" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq6QMffmdXuzJ/6cIFTlSn7Is5_aNVP-Rc1zdhEw686a-v/mQYhfdFVcMckUWlslCluDWxx7i-68Mwi/ww5cz7x1kkTW1LqcsR73lLPFuyTPyS5t/Jaj01ElaO_RS4SIqm0Lf4kbpsdCwMvG1/pAgWIvIoRsFiN_I56zvN3T0Y4OzFTdir/e_EotXWJ9WO3e1pVAm97OBjfSIFKOteF/rwIsO4-9InPRh5QLBbs23e9spwKEe-5j/SOoazjtjlb-xc4uVkaiJj1n-aTbp58xR/sYjfunYoTkk.jpg')"></div>
+      <div class="chapter__hero-veil"></div>
+      <div class="chapter__hero-content">
+        <p class="chapter__time">Обед · ужин</p>
+        <h2 class="chapter__question">Что будет<br>на вашем столе?</h2>
+        <p class="chapter__atmosphere">
+          Завтрак с видом на горы. Ужин после катания. Еда здесь — не «услуга питания», а естественная пауза между делами.
+        </p>
+      </div>
+    </div>
+
+    <div class="chapter__body">
+      <div class="chapter__body-inner">
+        <div class="chapter__present">
+          <p>В горнолыжный тур уже включено двухразовое питание — не потому что «так положено», а потому что после склона хочется есть, а после завтрака — не думать, где обед. Ресторан «Брудершафт» стоит так, что за окном — горы, а не столовая базы отдыха.</p>
+        </div>
+
+        <p class="chapter__practical-label">Где и что</p>
+        <ul class="flow-list">
+          <li>
+            <span class="flow-list__tag">Ресторан</span>
+            <span class="flow-list__text">«Брудершафт» — завтраки и ужины с панорамным видом, местная кухня</span>
+            <a href="#" class="flow-list__link">Меню →</a>
+          </li>
+          <li>
+            <span class="flow-list__tag">Включено</span>
+            <span class="flow-list__text">Двухразовое питание в горнолыжных турах — завтрак и ужин</span>
+            <a href="#" class="flow-list__link">Туры →</a>
+          </li>
+          <li>
+            <span class="flow-list__tag">Вечером</span>
+            <span class="flow-list__text">Бар GRADUS — apres-ski, живые программы по выходным</span>
+            <a href="#" class="flow-list__link">GRADUS →</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <div class="bridge">
+    <p>Когда склон закрывается — день не заканчивается</p>
+  </div>
+
+  <!-- Chapter 4: After the last run -->
+  <article class="chapter" id="after">
+    <div class="chapter__hero">
+      <div class="chapter__hero-bg" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdqwYOZVqCocXF/CmovMR5BkGX_zSOsGOCVp84NOrD4A30p/u6JMhsZNvkNhCYIW7bxJGLBzFpb7b-Cs/XdOdCN6H60EaA09MuRklDQvjNaBGXBUY/EGtlbRk8QDYgtklNnUxfcqc5EW-xYmwv/KQADY8gQh-JpMfShBGTQTd9fGADqTUnH/8zuCSdFv7YxKP9I-d5OLgUA905WoGX7W/RIfQYmC62_-hPP7L0xsCO97Nc-o7koOQ/llWOxFwktC09kKRIKSGWGL4KkdBJI_zX/7UAFvEPPzSc.jpg')"></div>
+      <div class="chapter__hero-veil"></div>
+      <div class="chapter__hero-content">
+        <p class="chapter__time">После склонов</p>
+        <h2 class="chapter__question">Что будет после<br>последнего спуска?</h2>
+        <p class="chapter__atmosphere">
+          Баня на озере. Разговор у камина. Прогулка, когда ноги ещё помнят склон, а голова уже отпустила.
+        </p>
+      </div>
+    </div>
+
+    <div class="chapter__body chapter__body--dark">
+      <div class="chapter__body-inner">
+        <div class="chapter__present">
+          <p>После катания тело просит тепла — и банный комплекс на озере в десяти минутах ходьбы. Фитосауна, парилка, купель. Можно окунуться с мостков — и это не «SPA-программа», а просто то, что делают здесь каждый вечер.</p>
+          <p>Или ничего не делать: сидеть на веранде, пить чай, слушать, как стихает курорт. Никто не предложит «культурную программу» — она случится сама, если захотите.</p>
+        </div>
+
+        <p class="chapter__practical-label">После катания</p>
+        <div class="cards">
+          <article class="card">
+            <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdqyBcjYkFSfwz/D7P4FE83YwNik0h9URqzKgzObxAaj-il/2z7qCAIR2sktv8bnyyn4yxOcTruwlhlJ/eXn0hOwsNgAEBaIuyg3NIozJwanZON2v/gE7SAHPsdWGhXWbAIsZ06nOWCb43y_w1/lD7X_0Vv_iHRaMPo9zQoG2UZK7X5qUob/1haBF3aeXdiHZO9obijAB4v2z_an65g5/eeNJrFNiXGWYnTX9Y6hDR3o2REQ0LO4Q/SyUyaw1iQK8WJSC1ATL6Npx50I4WlZXV/LIy3p9Y5vEU.jpg')"></div>
+            <div class="card__body">
+              <h3 class="card__name">Банный комплекс</h3>
+              <p class="card__desc">На озере — парилка, фитосауна, купель, мостки в воду</p>
+              <a href="#" class="card__link">О комплексе</a>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq7QGbHf_dDjK/fpJ9aNqeaR08AoUwdg2JtLteDNKjNC7I/Zay1Tati6cWX2-2qAiJvDtgg8ZcG0tJx/josHZVnBpto0buCmlEsXyOWeiw7p8JTv/UvLX9ktf0XSlJjZjTQYkmGr_Y-21XP9k/kea0JaqhE0hPC1PJwbLC90Nr6c1nqGiF/G4FaueYC_dS0ab0EU2Fs91WsbBt-vwGS/5uCSIDR-EMatWG0wy_CkkKLHIkpdOk1V/kHnd53oKGZhqwV-GT6tAdXS38_xwxZ49/_y3EqTlIflc.jpg')"></div>
+            <div class="card__body">
+              <h3 class="card__name">Бар GRADUS</h3>
+              <p class="card__desc">Apres-ski каждый день, живая музыка по выходным</p>
+              <a href="#" class="card__link">Афиша</a>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq9stoztuptxY/ACgYikGAvGKikPLCLDqGikMvUaW0bPHV/EyCc48mkFt4WupdTWpvfev6_6VSYzcNg/CgJnLq85FBTzO9Fs1Ocsr3Igtdny3jAW/HJKKf8duk_2Xj_XyT1ZD4_2e0JjahwW5/lF2FATAYFk_RGE7ocxVhKvetfmnT2EyQ/feUweibTDFcpnev-YBE6eoag-33mbCu4/tVkwTslAnrUtkujWNFhpNwiml3-87Gm5/ljKiagViHppS1un0MlPl-DQvdi2b04RP/U2vHL2qzUyE.jpg')"></div>
+            <div class="card__body">
+              <h3 class="card__name">Тропы и тишина</h3>
+              <p class="card__desc">Вечерние прогулки, когда курорт замирает</p>
+              <a href="#" class="card__link">Маршруты</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <div class="bridge">
+    <p>А когда стемнеет — останется самое главное</p>
+  </div>
+
+  <!-- Chapter 5: What remains outside when it gets dark -->
+  <article class="chapter" id="night">
+    <div class="chapter__hero">
+      <div class="chapter__hero-bg" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq5WeJis7di-6/KAcQR-LsnaTRRFQHIS2_kNAjqW_Zal3N/muMpP2KsigdFlbWGODoAn4Q0IMVMBSoq/j6LzeIS9iBS-tXSoJeIHsApxcTGvKGKM/cUUime-RXZF3vWr-AZV3wbgQmpSD_jWA/__IzVW8uba8jmuXoHAHLeW676pH7qgpc/UUJkc6w8H92PVfxq6bsCrV6UFEeJFivT/dSHQx4As55tgK8TEIS_y_j6AXSE723rL/uqqjhBuWGeUlv4lsNrEdjCQb6sSm1OGk/zf0XTLlFOXg.jpg')"></div>
+      <div class="chapter__hero-veil"></div>
+      <div class="chapter__hero-content">
+        <p class="chapter__time">Вечер · ночь</p>
+        <h2 class="chapter__question">Что останется за окном,<br>когда стемнеет?</h2>
+        <p class="chapter__atmosphere">
+          Тайга. Тишина — настолько громкая, что сначала пугает. Звёзды, которых не видно в городе.
+        </p>
+      </div>
+    </div>
+
+    <div class="chapter__body chapter__body--dark">
+      <div class="chapter__body-inner">
+        <div class="chapter__present poem-block">
+          <p>600 метров над уровнем моря. Сибирская тайга вокруг. Никакого фонового шума города — только ветер в елях и иногда далёкий звук подъёмника. Это не «эко-маркeting» — это просто то, что вы увидите, если выключите телефон и посмотрите в окно.</p>
+        </div>
+
+        <dl class="nature-stats">
+          <div>
+            <dt>600 м</dt>
+            <dd>высота · мягкий климат</dd>
+          </div>
+          <div>
+            <dt>50 км</dt>
+            <dd>грунтовка · и вы в тайге</dd>
+          </div>
+          <div>
+            <dt>0</dt>
+            <dd>городского шума</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </article>
+
+  <!-- Closing: practical only now -->
+  <section class="closing" id="closing">
+    <div class="closing__inner">
+      <p class="closing__label">Если вы уже представили</p>
+      <h2 class="closing__title">Пора решить<br>практические вопросы</h2>
+      <p class="closing__text">
+        Как добраться (последние 50 км — грунтовка, мы будем на связи), где остановиться, когда приехать. Всё это — после того, как вы захотели.
+      </p>
+
+      <div class="closing__actions">
+        <a href="#" class="btn btn--fill">Забронировать номер</a>
+        <a href="#" class="btn btn--line">Как добраться</a>
+      </div>
+
+      <nav class="closing__links">
+        <a href="#">Каталог номеров</a>
+        <a href="#">Цены и туры</a>
+        <a href="#">Трассы и подъёмники</a>
+        <a href="#">Веб-камеры</a>
+        <a href="#">Спецпредложения</a>
+        <a href="#">Salanga Live</a>
+        <a href="tel:+73912277006">+7 (391) 22-77-006</a>
+      </nav>
+
+      <p class="footer-note">Прототип 1 · сценарий пребывания · <a href="hub.html" style="color:inherit">все варианты</a></p>
+    </div>
+  </section>
+
+  <div class="proto-badge">Прототип 1 · <a href="hub.html" style="color:inherit">Все варианты</a></div>
+
+  <script>
+    const sections = document.querySelectorAll('[id]');
+    const navDots = document.querySelectorAll('.day-nav a');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          navDots.forEach(dot => {
+            dot.classList.toggle('active', dot.dataset.section === id);
+          });
+        }
+      });
+    }, { threshold: 0.35, rootMargin: '-10% 0px -10% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</body>
+</html>

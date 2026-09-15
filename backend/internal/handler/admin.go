@@ -127,13 +127,32 @@ func (h *Handler) AdminListTransactions(c *gin.Context) {
 	response.OK(c, result)
 }
 
+func requestScheme(c *gin.Context) string {
+	if proto := c.GetHeader("X-Forwarded-Proto"); proto != "" {
+		return proto
+	}
+	if c.Request.TLS != nil {
+		return "https"
+	}
+	return "http"
+}
+
 func (h *Handler) AdminListPOSKeys(c *gin.Context) {
-	keys, err := h.admin.ListPOSKeys(c.Request.Context())
+	payload, err := h.admin.ListPOSKeys(c.Request.Context())
 	if err != nil {
 		response.Internal(c, "list keys failed")
 		return
 	}
-	response.OK(c, keys)
+	if apiURL, _ := payload["apiUrl"].(string); apiURL == "" || apiURL == "/api/partner/v2" || apiURL == "/partner/v2" {
+		payload["apiUrl"] = h.cfg.PartnerV2URL(requestScheme(c), c.Request.Host)
+	}
+	if companyID, _ := payload["companyId"].(string); companyID == "" {
+		payload["companyId"] = h.cfg.UDSCompanyID
+		if payload["companyId"] == "" {
+			payload["companyId"] = "1"
+		}
+	}
+	response.OK(c, payload)
 }
 
 func (h *Handler) AdminCreatePOSKey(c *gin.Context) {
@@ -148,6 +167,9 @@ func (h *Handler) AdminCreatePOSKey(c *gin.Context) {
 	if err != nil {
 		response.Internal(c, "create key failed")
 		return
+	}
+	if apiURL, _ := key["apiUrl"].(string); apiURL == "" {
+		key["apiUrl"] = h.cfg.ResolvePublicAPIURL(requestScheme(c), c.Request.Host)
 	}
 	response.Created(c, key)
 }

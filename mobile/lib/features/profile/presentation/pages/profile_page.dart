@@ -1,11 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/auth/biometric_prompt.dart';
+import '../../../../core/auth/biometric_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/error_placeholder.dart';
 import '../../../../shared/widgets/install_app_banner.dart';
 import '../../../../shared/widgets/skeleton_loader.dart';
+import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/profile_repository.dart';
 
@@ -22,6 +26,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading = true;
   bool _saving = false;
   bool _editing = false;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
   String? _error;
   String? _success;
 
@@ -56,10 +62,17 @@ class _ProfilePageState extends State<ProfilePage> {
     });
     try {
       final profile = await _repository.fetchProfile();
+      final biometricAvailable = await BiometricService().canUse();
+      var biometricEnabled = false;
+      if (mounted) {
+        biometricEnabled = await context.read<AuthBloc>().isBiometricAlreadyEnabled();
+      }
       if (!mounted) return;
       setState(() {
         _profile = profile;
         _fillForm(profile);
+        _biometricAvailable = biometricAvailable;
+        _biometricEnabled = biometricEnabled;
         _loading = false;
       });
     } catch (e) {
@@ -98,6 +111,41 @@ class _ProfilePageState extends State<ProfilePage> {
         _saving = false;
       });
     }
+  }
+
+  Future<void> _enableBiometricWithPassword() async {
+    final email = _profile?['email'] as String? ?? _emailController.text.trim();
+    final passwordController = TextEditingController();
+    final password = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Привязать Face ID'),
+        content: TextField(
+          controller: passwordController,
+          obscureText: true,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Пароль от аккаунта'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, passwordController.text),
+            child: const Text('Продолжить'),
+          ),
+        ],
+      ),
+    );
+    if (password == null || password.isEmpty || email.isEmpty || !mounted) {
+      return;
+    }
+    await maybeOfferBiometricLogin(
+      context,
+      email: email,
+      password: password,
+    );
+    if (!mounted) return;
+    final enabled = await context.read<AuthBloc>().isBiometricAlreadyEnabled();
+    setState(() => _biometricEnabled = enabled);
   }
 
   @override
@@ -220,6 +268,25 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ],
             const Divider(),
+            if (_biometricAvailable || kIsWeb)
+              SwitchListTile(
+                secondary: const Icon(Icons.face_retouching_natural),
+                title: const Text('Вход по Face ID / отпечатку'),
+                subtitle: Text(
+                  _biometricEnabled
+                      ? 'Можно входить без пароля'
+                      : 'Включите, чтобы входить по Face ID',
+                ),
+                value: _biometricEnabled,
+                onChanged: (enabled) async {
+                  if (!enabled) {
+                    await AuthRepository().disableBiometric();
+                    if (mounted) setState(() => _biometricEnabled = false);
+                    return;
+                  }
+                  await _enableBiometricWithPassword();
+                },
+              ),
             if (showInstallAppMenuItem)
               ListTile(
                 leading: const Icon(Icons.install_mobile),

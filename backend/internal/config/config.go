@@ -43,6 +43,8 @@ type Config struct {
 	SMTPFrom           string
 	SMTPFromName       string
 	AppPublicURL       string
+	PublicAPIURL       string
+	UDSCompanyID       string
 }
 
 func Load() (*Config, error) {
@@ -76,6 +78,8 @@ func Load() (*Config, error) {
 		SMTPFrom:           getEnv("SMTP_FROM", ""),
 		SMTPFromName:       getEnv("SMTP_FROM_NAME", "Gornaya Salanga"),
 		AppPublicURL:       strings.TrimRight(getEnv("APP_PUBLIC_URL", "http://localhost:5173"), "/"),
+		PublicAPIURL:       strings.TrimRight(getEnv("PUBLIC_API_URL", ""), "/"),
+		UDSCompanyID:       strings.TrimSpace(getEnv("POS_UDS_COMPANY_ID", "1")),
 	}
 
 	cfg.JWTAccessTTL = parseDuration(getEnv("JWT_ACCESS_TTL", "15m"), 15*time.Minute)
@@ -149,4 +153,27 @@ func splitAndTrim(s string) []string {
 		}
 	}
 	return out
+}
+
+func (c *Config) ResolvePublicAPIURL(scheme, host string) string {
+	if c != nil && strings.TrimSpace(c.PublicAPIURL) != "" {
+		return strings.TrimRight(c.PublicAPIURL, "/")
+	}
+	scheme = strings.TrimSpace(scheme)
+	if scheme == "" {
+		scheme = "http"
+	}
+	host = strings.TrimSpace(host)
+	if host == "" {
+		port := "8080"
+		if c != nil && c.Port != "" {
+			port = c.Port
+		}
+		return "http://localhost:" + port
+	}
+	return scheme + "://" + host
+}
+
+func (c *Config) PartnerV2URL(scheme, host string) string {
+	return strings.TrimRight(c.ResolvePublicAPIURL(scheme, host), "/") + "/api/partner/v2"
 }

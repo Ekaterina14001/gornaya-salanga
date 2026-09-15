@@ -64,6 +64,24 @@ func AdminOnly() gin.HandlerFunc {
 	}
 }
 
+func LookupPOSSystem(c *gin.Context, posRepo *repository.POSRepository, validKeys map[string]string, key string) (string, bool) {
+	if key == "" {
+		return "", false
+	}
+	for system, valid := range validKeys {
+		if key == valid {
+			return system, true
+		}
+	}
+	if posRepo != nil {
+		system, err := posRepo.ValidateAPIKey(c.Request.Context(), key)
+		if err == nil && system != "" {
+			return system, true
+		}
+	}
+	return "", false
+}
+
 func APIKey(validKeys map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.GetHeader("X-API-Key")
@@ -72,15 +90,14 @@ func APIKey(validKeys map[string]string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		for system, valid := range validKeys {
-			if key == valid {
-				c.Set("posSystem", system)
-				c.Next()
-				return
-			}
+		system, ok := LookupPOSSystem(c, nil, validKeys, key)
+		if !ok {
+			response.Unauthorized(c, "invalid API key")
+			c.Abort()
+			return
 		}
-		response.Unauthorized(c, "invalid API key")
-		c.Abort()
+		c.Set("posSystem", system)
+		c.Next()
 	}
 }
 
@@ -92,23 +109,41 @@ func APIKeyWithDB(posRepo *repository.POSRepository, validKeys map[string]string
 			c.Abort()
 			return
 		}
-		for system, valid := range validKeys {
-			if key == valid {
-				c.Set("posSystem", system)
-				c.Next()
-				return
-			}
+		system, ok := LookupPOSSystem(c, posRepo, validKeys, key)
+		if !ok {
+			response.Unauthorized(c, "invalid API key")
+			c.Abort()
+			return
 		}
-		if posRepo != nil {
-			system, err := posRepo.ValidateAPIKey(c.Request.Context(), key)
-			if err == nil && system != "" {
-				c.Set("posSystem", system)
-				c.Next()
-				return
-			}
+		c.Set("posSystem", system)
+		c.Next()
+	}
+}
+
+func UDSBasic(companyID string, posRepo *repository.POSRepository, validKeys map[string]string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if id := strings.TrimSpace(c.GetHeader("X-Origin-Request-Id")); id != "" {
+			c.Header("X-Request-Id", id)
 		}
-		response.Unauthorized(c, "invalid API key")
-		c.Abort()
+		user, pass, ok := c.Request.BasicAuth()
+		if !ok || strings.TrimSpace(pass) == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"errorCode": "unauthorized", "message": "invalid company ID or API Key"})
+			c.Abort()
+			return
+		}
+		if strings.TrimSpace(user) != strings.TrimSpace(companyID) {
+			c.JSON(http.StatusUnauthorized, gin.H{"errorCode": "unauthorized", "message": "invalid company ID or API Key"})
+			c.Abort()
+			return
+		}
+		system, ok := LookupPOSSystem(c, posRepo, validKeys, pass)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"errorCode": "unauthorized", "message": "invalid company ID or API Key"})
+			c.Abort()
+			return
+		}
+		c.Set("posSystem", system)
+		c.Next()
 	}
 }
 

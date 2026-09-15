@@ -19,6 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _autoBiometricTried = false;
 
   @override
   void dispose() {
@@ -44,8 +45,17 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listenWhen: (prev, curr) =>
-            prev.status != curr.status && curr.status == AuthStatus.authenticated,
-        listener: (context, state) => context.go('/home'),
+            prev.status != curr.status ||
+            prev.showBiometricLogin != curr.showBiometricLogin,
+        listener: (context, state) {
+          if (state.showBiometricLogin &&
+              !_autoBiometricTried &&
+              state.status == AuthStatus.unauthenticated &&
+              !state.isLoading) {
+            _autoBiometricTried = true;
+            context.read<AuthBloc>().add(const AuthBiometricUnlockRequested());
+          }
+        },
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -113,6 +123,25 @@ class _LoginPageState extends State<LoginPage> {
                         },
                       ),
                       const SizedBox(height: 16),
+                      BlocBuilder<AuthBloc, AuthState>(
+                        builder: (context, state) {
+                          if (!state.showBiometricLogin) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: OutlinedButton.icon(
+                              onPressed: state.isLoading
+                                  ? null
+                                  : () => context.read<AuthBloc>().add(
+                                        const AuthBiometricUnlockRequested(),
+                                      ),
+                              icon: const Icon(Icons.fingerprint),
+                              label: const Text('Войти по Face ID или отпечатку'),
+                            ),
+                          );
+                        },
+                      ),
                       BlocBuilder<AuthBloc, AuthState>(
                         builder: (context, state) {
                           return FilledButton(

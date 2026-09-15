@@ -2,23 +2,48 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/auth/biometric_service.dart';
 import '../../data/auth_repository.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc({AuthRepository? authRepository})
+  AuthBloc({AuthRepository? authRepository, BiometricService? biometricService})
       : _authRepository = authRepository ?? AuthRepository(),
+        _biometric = biometricService ?? BiometricService(),
         super(const AuthState.unknown()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthVerifyRequested>(_onVerifyRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
+    on<AuthBiometricUnlockRequested>(_onBiometricUnlockRequested);
+    on<AuthBiometricEnabled>(_onBiometricEnabled);
   }
 
   final AuthRepository _authRepository;
+  final BiometricService _biometric;
+  String? _pendingBioEmail;
+  String? _pendingBioPassword;
+
+  Future<bool> isBiometricAlreadyEnabled() => _authRepository.isBiometricEnabled();
+
+  ({String email, String password})? takePendingBiometricOffer() {
+    final email = _pendingBioEmail;
+    final password = _pendingBioPassword;
+    _pendingBioEmail = null;
+    _pendingBioPassword = null;
+    if (email == null || email.isEmpty || password == null || password.isEmpty) {
+      return null;
+    }
+    return (email: email, password: password);
+  }
+
+  void _rememberBiometricOffer(String email, String password) {
+    _pendingBioEmail = email;
+    _pendingBioPassword = password;
+  }
 
   Future<void> _onCheckRequested(
     AuthCheckRequested event,
@@ -27,10 +52,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(isLoading: true, clearError: true));
     try {
       final hasSession = await _authRepository.hasStoredSession();
+      final biometricOn = await _authRepository.isBiometricEnabled();
+      final canBiometric = biometricOn && await _biometric.canUse();
+      if (hasSession && !canBiometric) {
+        emit(const AuthState.authenticated());
+        return;
+      }
       emit(
-        hasSession
-            ? const AuthState.authenticated()
-            : const AuthState.unauthenticated(),
+        const AuthState.unauthenticated().copyWith(
+          showBiometricLogin: canBiometric,
+        ),
       );
     } catch (_) {
       emit(const AuthState.unauthenticated());
@@ -47,12 +78,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
+      if (await _authRepository.isBiometricEnabled()) {
+        await _authRepository.enableBiometric(
+          email: event.email,
+          password: event.password,
+        );
+      } else {
+        _rememberBiometricOffer(event.email, event.password);
+      }
       emit(const AuthState.authenticated());
     } on DioException catch (e) {
       emit(
         AuthState.unauthenticated().copyWith(
           isLoading: false,
           errorMessage: _mapDioError(e),
+          showBiometricLogin: state.showBiometricLogin,
         ),
       );
     } catch (e) {
@@ -60,6 +100,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         AuthState.unauthenticated().copyWith(
           isLoading: false,
           errorMessage: e.toString(),
+          showBiometricLogin: state.showBiometricLogin,
         ),
       );
     }
@@ -78,6 +119,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         firstName: event.firstName,
         lastName: event.lastName,
       );
+      if (await _authRepository.isBiometricEnabled()) {
+        await _authRepository.enableBiometric(
+          email: event.email,
+          password: event.password,
+        );
+      } else {
+        _rememberBiometricOffer(event.email, event.password);
+      }
       emit(const AuthState.authenticated());
     } on DioException catch (e) {
       emit(
@@ -135,7 +184,67 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await _authRepository.logout();
+    _pendingBioEmail = null;
+    _pendingBioPassword = null;
     emit(const AuthState.unauthenticated());
+  }
+
+  Future<void> _onBiometricUnlockRequested(
+    AuthBiometricUnlockRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, clearError: true, showBiometricLogin: true));
+    final ok = await _biometric.authenticate();
+    if (!ok) {
+      emit(
+        const AuthState.unauthenticated().copyWith(
+          showBiometricLogin: true,
+          errorMessage: 'Не удалось подтвердить личность',
+        ),
+      );
+      return;
+    }
+    if (await _authRepository.hasStoredSession()) {
+      emit(const AuthState.authenticated());
+      return;
+    }
+    final creds = await _authRepository.biometricCredentials();
+    if (creds == null) {
+      emit(
+        const AuthState.unauthenticated().copyWith(
+          errorMessage: 'Войдите по email и паролю',
+        ),
+      );
+      return;
+    }
+    try {
+      await _authRepository.login(email: creds.email, password: creds.password);
+      emit(const AuthState.authenticated());
+    } on DioException catch (e) {
+      emit(
+        const AuthState.unauthenticated().copyWith(
+          showBiometricLogin: true,
+          errorMessage: _mapDioError(e),
+        ),
+      );
+    } catch (e) {
+      emit(
+        const AuthState.unauthenticated().copyWith(
+          showBiometricLogin: true,
+          errorMessage: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onBiometricEnabled(
+    AuthBiometricEnabled event,
+    Emitter<AuthState> emit,
+  ) async {
+    await _authRepository.enableBiometric(
+      email: event.email,
+      password: event.password,
+    );
   }
 
   String _mapDioError(DioException e) {

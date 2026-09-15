@@ -22,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _acceptedTerms = false;
+  bool _acceptedPrivacy = false;
 
   @override
   void dispose() {
@@ -35,9 +36,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    if (!_acceptedTerms) {
+    if (!_acceptedTerms || !_acceptedPrivacy) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Подтвердите согласие с правилами')),
+        const SnackBar(
+          content: Text('Подтвердите согласие с правилами и обработкой персональных данных'),
+        ),
       );
       return;
     }
@@ -119,6 +122,16 @@ class _RegisterPageState extends State<RegisterPage> {
                     onChanged: (value) =>
                         setState(() => _acceptedTerms = value ?? false),
                     title: const Text('Согласен с правилами посещения курорта'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _acceptedPrivacy,
+                    onChanged: (value) =>
+                        setState(() => _acceptedPrivacy = value ?? false),
+                    title: const Text(
+                      'Согласен на обработку персональных данных',
+                    ),
                     controlAffinity: ListTileControlAffinity.leading,
                   ),
                   BlocBuilder<AuthBloc, AuthState>(

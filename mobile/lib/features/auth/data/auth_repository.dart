@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 
 
 
+import '../../../core/auth/biometric_service.dart';
 import '../../../core/network/dio_client.dart';
 
 import '../../../core/network/api_response.dart';
@@ -164,7 +165,28 @@ class AuthRepository {
     );
   }
 
-  Future<void> logout() => _secureStorage.clearTokens();
+  Future<void> logout() async {
+    await _secureStorage.clearTokens();
+    await disableBiometric();
+  }
+
+  Future<bool> isBiometricEnabled() => _secureStorage.isBiometricEnabled();
+
+  Future<void> enableBiometric({
+    required String email,
+    required String password,
+  }) {
+    return _secureStorage.saveLoginCredentials(email: email, password: password);
+  }
+
+  Future<void> disableBiometric() async {
+    await _secureStorage.setBiometricEnabled(false);
+    await BiometricService().clear();
+  }
+
+  Future<({String email, String password})?> biometricCredentials() {
+    return _secureStorage.getLoginCredentials();
+  }
 
 }
 

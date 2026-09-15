@@ -22,7 +22,7 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 
 	corsCfg := cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-API-Key"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-API-Key", "X-Origin-Request-Id", "X-Timestamp"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -110,6 +110,15 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 		external.POST("/spend", h.BonusSpend)
 	}
 
+	partner := r.Group("/partner/v2")
+	partner.Use(middleware.UDSBasic(cfg.UDSCompanyID, posRepo, cfg.PosAPIKeys), middleware.POSRequestLogger(posRepo))
+	registerUDSPartner(partner, h)
+
+	// Same protocol behind /api/ so existing host nginx `location /api/` proxies it.
+	partnerAPI := r.Group("/api/partner/v2")
+	partnerAPI.Use(middleware.UDSBasic(cfg.UDSCompanyID, posRepo, cfg.PosAPIKeys), middleware.POSRequestLogger(posRepo))
+	registerUDSPartner(partnerAPI, h)
+
 	admin := r.Group("/api/admin")
 	admin.Use(middleware.JWT(jwtManager), middleware.AdminOnly())
 	{
@@ -154,6 +163,17 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 	}
 
 	return r
+}
+
+func registerUDSPartner(partner *gin.RouterGroup, h *handler.Handler) {
+	partner.GET("/settings", h.UDSSettings)
+	partner.GET("/customers/find", h.UDSFindCustomer)
+	partner.GET("/customers/:id", h.UDSGetCustomer)
+	partner.POST("/operations/calc", h.UDSCalc)
+	partner.POST("/operations", h.UDSCreateOperation)
+	partner.GET("/operations", h.UDSListOperations)
+	partner.GET("/operations/:id", h.UDSGetOperation)
+	partner.POST("/operations/:id/refund", h.UDSRefund)
 }
 
 func NewServer(addr string, handler http.Handler) *http.Server {

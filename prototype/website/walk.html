@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Горная Саланга — Прогулка · Прототип 2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pine: #1e3a2f;
+      --pine-light: #2a4f3e;
+      --bark: #6b4f3a;
+      --snow: #eef1ee;
+      --mist: #fafaf8;
+      --ink: #121816;
+      --ink-soft: #4a524e;
+      --trail: #8fa898;
+      --accent: #c9a86c;
+      --trail-w: 280px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--ink);
+      background: var(--mist);
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Trail sidebar ── */
+    .trail {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: var(--trail-w);
+      background: var(--pine);
+      color: rgba(255,255,255,.75);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 28px;
+      border-right: 1px solid rgba(255,255,255,.08);
+    }
+    .trail__logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .trail__sub {
+      font-size: .65rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      opacity: .45;
+      margin-bottom: 40px;
+    }
+    .trail__path {
+      flex: 1;
+      position: relative;
+      padding-left: 20px;
+    }
+    .trail__path::before {
+      content: '';
+      position: absolute;
+      left: 5px; top: 8px; bottom: 8px;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--trail), rgba(143,168,152,.2));
+    }
+    .trail__stop {
+      position: relative;
+      display: block;
+      padding: 14px 0 14px 24px;
+      font-size: .78rem;
+      opacity: .45;
+      transition: opacity .3s, color .3s;
+    }
+    .trail__stop::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      border: 2px solid var(--trail);
+      background: var(--pine);
+      transition: all .35s;
+    }
+    .trail__stop.active,
+    .trail__stop:hover { opacity: 1; color: #fff; }
+    .trail__stop.active::before {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(201,168,108,.5);
+    }
+    .trail__stop-label {
+      display: block;
+      font-size: .6rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      opacity: .6;
+      margin-bottom: 2px;
+    }
+    .trail__book {
+      margin-top: auto;
+      padding: 12px 0;
+      font-size: .75rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    /* ── Main scroll area ── */
+    .journey {
+      margin-left: var(--trail-w);
+      scroll-snap-type: y mandatory;
+      overflow-y: scroll;
+      height: 100vh;
+    }
+    .stop {
+      scroll-snap-align: start;
+      min-height: 100vh;
+      position: relative;
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+    .stop__visual {
+      position: relative;
+      overflow: hidden;
+    }
+    .stop__img {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.03);
+      transition: transform 8s ease-out;
+    }
+    .stop.in-view .stop__img { transform: scale(1); }
+    .stop__veil {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, rgba(18,24,22,.82) 0%, rgba(18,24,22,.35) 55%, rgba(18,24,22,.15) 100%);
+    }
+    .stop__question-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 clamp(48px, 8vw, 120px);
+    }
+    .stop__meta {
+      font-size: .7rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .stop__question {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 400;
+      line-height: 1.08;
+      color: #fff;
+      max-width: 14ch;
+    }
+    .stop__feel {
+      margin-top: 24px;
+      font-size: 1rem;
+      font-weight: 300;
+      color: rgba(255,255,255,.82);
+      max-width: 40ch;
+      line-height: 1.75;
+    }
+
+    /* ── Practical panel slides up ── */
+    .stop__panel {
+      background: var(--mist);
+      padding: clamp(40px, 6vh, 64px) clamp(48px, 8vw, 120px);
+      border-top: 3px solid var(--accent);
+    }
+    .stop__panel--dark {
+      background: var(--pine);
+      color: rgba(255,255,255,.85);
+    }
+    .stop__present {
+      font-size: 1.02rem;
+      color: var(--ink-soft);
+      max-width: 58ch;
+      line-height: 1.8;
+      margin-bottom: 36px;
+    }
+    .stop__panel--dark .stop__present { color: rgba(255,255,255,.72); }
+    .stop__practical {
+      font-size: .65rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--bark);
+      margin-bottom: 20px;
+    }
+    .stop__panel--dark .stop__practical { color: var(--accent); }
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .tile {
+      background: #fff;
+      border: 1px solid #dde3de;
+      padding: 20px;
+      transition: border-color .3s;
+    }
+    .tile:hover { border-color: var(--pine-light); }
+    .stop__panel--dark .tile {
+      background: var(--pine-light);
+      border-color: rgba(255,255,255,.1);
+    }
+    .tile__name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+    }
+    .tile__desc {
+      font-size: .82rem;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .stop__panel--dark .tile__desc { color: rgba(255,255,255,.55); }
+    .tile__link {
+      font-size: .72rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--pine-light);
+    }
+    .stop__panel--dark .tile__link { color: var(--accent); }
+
+    .intro-stop .stop__veil {
+      background: linear-gradient(to top, rgba(18,24,22,.88) 0%, rgba(18,24,22,.4) 100%);
+    }
+    .intro-stop .stop__question-wrap {
+      align-items: flex-end;
+      padding-bottom: 15vh;
+    }
+    .intro-stop .stop__question { max-width: 20ch; font-size: clamp(2.8rem, 6vw, 4.5rem); }
+
+    .closing-stop .stop__panel {
+      text-align: center;
+      background: var(--ink);
+      color: rgba(255,255,255,.8);
+      border-top-color: var(--accent);
+    }
+    .closing-stop .stop__question {
+      font-size: clamp(2rem, 4vw, 3rem);
+      max-width: none;
+    }
+    .closing-stop .stop__present { margin-inline: auto; color: rgba(255,255,255,.65); }
+    .btn-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+    .btn {
+      padding: 14px 28px;
+      font-size: .78rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .btn--ghost {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .proto {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 100;
+      font-size: .65rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,.92);
+      padding: 8px 12px;
+      color: var(--ink-soft);
+    }
+    .proto a { color: var(--pine); }
+
+    @media (max-width: 900px) {
+      .trail { display: none; }
+      .journey { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="trail">
+    <p class="trail__logo">Горная Саланга</p>
+    <p class="trail__sub">Маршрут дня</p>
+    <nav class="trail__path" aria-label="Локации">
+      <a href="#intro" class="trail__stop active" data-stop="intro"><span class="trail__stop-label">Старт</span>Представьте себя здесь</a>
+      <a href="#morning" class="trail__stop" data-stop="morning"><span class="trail__stop-label">Утро</span>Где просыпаться?</a>
+      <a href="#day" class="trail__stop" data-stop="day"><span class="trail__stop-label">День</span>Куда пойти?</a>
+      <a href="#table" class="trail__stop" data-stop="table"><span class="trail__stop-label">Стол</span>Что на столе?</a>
+      <a href="#after" class="trail__stop" data-stop="after"><span class="trail__stop-label">Вечер</span>После спуска</a>
+      <a href="#night" class="trail__stop" data-stop="night"><span class="trail__stop-label">Ночь</span>За окном</a>
+      <a href="#closing" class="trail__stop" data-stop="closing"><span class="trail__stop-label">Финал</span>Практика</a>
+    </nav>
+    <a href="#closing" class="trail__book">Забронировать →</a>
+  </aside>
+
+  <main class="journey" id="journey">
+
+    <section class="stop intro-stop" id="intro">
+      <div class="stop__visual">
+        <div class="stop__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq7jBqGIcD_4_/4ONJd1TfsAC6ZWZ9qpf4_2xYvOXCxzqz/aBp39U09MmKwuejSJcPLfNseDaYmkPTt/URxlGB-aeWhvs31xNXmaQZEizPzV5i1j/Afhm7i8-1zGlNUW7u-BEniy8bpFjxwq2/zMD7upo4dSNKEp4Z0ZoZ2VAq42-dOcjm/02l5zpCiIf2O1MSdNMek315TW5in_A_I/w2G1yePsuJKNhvP5DDIvXmFGrgZiDcEZ/8TUgoZi18TKRiDkzNeuODFbMmmkQ4FlE/RuLa8LIdf3g.jpg')"></div>
+        <div class="stop__veil"></div>
+        <div class="stop__question-wrap">
+          <div>
+            <p class="stop__meta">Сибирская тайга · 600 м · Кузбасс</p>
+            <h1 class="stop__question">Идите по Саланге —<br>шаг за шагом</h1>
+            <p class="stop__feel">Не каталог услуг, а маршрут одного дня. Листайте вниз — каждая остановка это локация, которую вы проходите.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stop" id="morning">
+      <div class="stop__visual" style="min-height:55vh">
+        <div class="stop__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq7RU9maVQWKr/YumAxKbC0GiD28JmHv8Ha2bmbiQ4m7_8/y3nmDtkC-eJpg5CD4g351sJT4KEGz-Be/soALFFUENVR4qiKPmcH8vNdEEag_603a/9jwJaefr2l3BwKtGPL9W5A_DV6czSpVm/1h54mi_Zx2ec7ZMQcoV8J5wZmzYkPyFl/53a_MfGuQ2g0t1RZgaY5n6wkpPA9BeZ1/OCtuIVzqW4-v7p24ARphZ6wNEb0YlElf/ybnEl8THZY4dOsGrdjbQvTw6UumQIBvi/Wv790ecP3ZY.jpg')"></div>
+        <div class="stop__veil"></div>
+        <div class="stop__question-wrap">
+          <div>
+            <p class="stop__meta">Локация · Шале</p>
+            <h2 class="stop__question">Где вы будете просыпаться?</h2>
+            <p class="stop__feel">Сначала тишина. Потом свет сквозь деревянную раму. За окном — тайга, не парковка.</p>
+          </div>
+        </div>
+      </div>
+      <div class="stop__panel">
+        <p class="stop__present">Утро в Саланге — это выбор пространства: отдельное шале с террасой, номер с балконом на склон, сьют с видом на озеро. Сначала ощущение — потом характеристики.</p>
+        <p class="stop__practical">Варианты проживания</p>
+        <div class="tiles">
+          <article class="tile"><h3 class="tile__name">Романтик Шале</h3><p class="tile__desc">Отдельный дом, терраса, две комнаты</p><a href="#" class="tile__link">Подробнее →</a></article>
+          <article class="tile"><h3 class="tile__name">Стандарт+</h3><p class="tile__desc">Балкон, вид на трассы</p><a href="#" class="tile__link">Подробнее →</a></article>
+          <article class="tile"><h3 class="tile__name">Люкс</h3><p class="tile__desc">Спальня и гостиная для семьи</p><a href="#" class="tile__link">Подробнее →</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="stop" id="day">
+      <div class="stop__visual" style="min-height:55vh">
+        <div class="stop__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq4jYMX5XD6au/Byz9m_ne5iA_MEb1kkFH_iqXJkOzpBkH/WJYLwPQWRfEzh4KsKczzsqGu0HpDcYDD/lEQnzHnljr2gfNLo_lM8aOuIQni8hSgk/tFo5WCP-ysqf0Bqv-fwNwGn6yPibA9g6/hk1IawzKiI5xs9XhtfbWFUmeqvcUk4NN/XI4NjrJROQLwMsHaGNG8bJRbIwwDxwHj/ffJhiuH7VRmiK_TmimTL5RVrljLE4Lbg/-rBmE7idT0EiLjt1UCLVU9fyOWNRgPUx/C3WZDirczQo.jpg')"></div>
+        <div class="stop__veil"></div>
+        <div class="stop__question-wrap">
+          <div>
+            <p class="stop__meta">Локация · Склон</p>
+            <h2 class="stop__question">Куда вы пойдёте утром?</h2>
+            <p class="stop__feel">На лыжах — или по тропе. Саланга не только про катание. Это про то, куда ведёт вас утро.</p>
+          </div>
+        </div>
+      </div>
+      <div class="stop__panel">
+        <p class="stop__present">12 км трасс в нескольких минутах от номера. Летом — те же горы, только зелёные. Никаких автобусов до подъёмника — вы просто выходите.</p>
+        <p class="stop__practical">Активности</p>
+        <div class="tiles">
+          <article class="tile"><h3 class="tile__name">Горные лыжи</h3><p class="tile__desc">12 км, 4 подъёмника, прокат, школа</p><a href="#" class="tile__link">Трассы →</a></article>
+          <article class="tile"><h3 class="tile__name">Тайга</h3><p class="tile__desc">Терренкур, квадроциклы, рыбалка</p><a href="#" class="tile__link">Маршруты →</a></article>
+          <article class="tile"><h3 class="tile__name">Зимой и летом</h3><p class="tile__desc">Снегоходы, йога, прогулки</p><a href="#" class="tile__link">Всё →</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="stop" id="table">
+      <div class="stop__visual" style="min-height:55vh">
+        <div class="stop__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq0XKDsNtte8O/JdVs01BCye_lQRGLITYYhr6-Ku04a0Z1/fuqduxH-5IH8zWblRsnZxZnbZhZsEuV-/pjxxe4B9LQWMlVUsFZzLtaOIhSdsHHWW/PaYgHmV_HUq345x8D8Vp9i6RXDwt7sPW/nEFjt7vc8tu9BOVe9BIqk0oyB_eLT_a3/eWjEUw-lvuVM8lMRqXwQuy1hJfXk71tT/N9E2e9WetCVOqMsIGM7GXJdqjUWxbL4t/kUNveUi3qmXVoYAeRWosaZlKHYd6OCw5/aQYp-zO0q48.jpg')"></div>
+        <div class="stop__veil"></div>
+        <div class="stop__question-wrap">
+          <div>
+            <p class="stop__meta">Локация · Ресторан</p>
+            <h2 class="stop__question">Что будет на вашем столе?</h2>
+            <p class="stop__feel">Завтрак с видом на горы. Ужин после катания. Еда — пауза между делами, не «услуга питания».</p>
+          </div>
+        </div>
+      </div>
+      <div class="stop__panel">
+        <p class="stop__present">«Брудершафт» стоит так, что за окном — горы. В горнолыжный тур включено двухразовое питание — потому что после склона хочется есть.</p>
+        <p class="stop__practical">Где поесть</p>
+        <div class="tiles">
+          <article class="tile"><h3 class="tile__name">Брудершафт</h3><p class="tile__desc">Завтраки и ужины, панорама, местная кухня</p><a href="#" class="tile__link">Меню →</a></article>
+          <article class="tile"><h3 class="tile__name">GRADUS</h3><p class="tile__desc">Apres-ski, живая программа по выходным</p><a href="#" class="tile__link">Афиша →</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="stop" id="after">
+      <div class="stop__visual" style="min-height:55vh">
+        <div class="stop__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdqwYOZVqCocXF/CmovMR5BkGX_zSOsGOCVp84NOrD4A30p/u6JMhsZNvkNhCYIW7bxJGLBzFpb7b-Cs/XdOdCN6H60EaA09MuRklDQvjNaBGXBUY/EGtlbRk8QDYgtklNnUxfcqc5EW-xYmwv/KQADY8gQh-JpMfShBGTQTd9fGADqTUnH/8zuCSdFv7YxKP9I-d5OLgUA905WoGX7W/RIfQYmC62_-hPP7L0xsCO97Nc-o7koOQ/llWOxFwktC09kKRIKSGWGL4KkdBJI_zX/7UAFvEPPzSc.jpg')"></div>
+        <div class="stop__veil"></div>
+        <div class="stop__question-wrap">
+          <div>
+            <p class="stop__meta">Локация · Озеро</p>
+            <h2 class="stop__question">Что после последнего спуска?</h2>
+            <p class="stop__feel">Баня на озере. Разговор у камина. Прогулка, когда ноги ещё помнят склон.</p>
+          </div>
+        </div>
+      </div>
+      <div class="stop__panel stop__panel--dark">
+        <p class="stop__present">Банный комплекс на озере — парилка, фитосауна, купель. Или просто сидеть на веранде и слушать, как стихает курорт.</p>
+        <p class="stop__practical">После катания</p>
+        <div class="tiles">
+          <article class="tile"><h3 class="tile__name">SPA на озере</h3><p class="tile__desc">Баня, сауна, мостки в воду</p><a href="#" class="tile__link">О комплексе →</a></article>
+          <article class="tile"><h3 class="tile__name">GRADUS</h3><p class="tile__desc">Apres-ski каждый день</p><a href="#" class="tile__link">Бар →</a></article>
+          <article class="tile"><h3 class="tile__name">Тропы</h3><p class="tile__desc">Вечерние прогулки в тишине</p><a href="#" class="tile__link">Маршруты →</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="stop" id="night">
+      <div class="stop__visual" style="min-height:55vh">
+        <div class="stop__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq5WeJis7di-6/KAcQR-LsnaTRRFQHIS2_kNAjqW_Zal3N/muMpP2KsigdFlbWGODoAn4Q0IMVMBSoq/j6LzeIS9iBS-tXSoJeIHsApxcTGvKGKM/cUUime-RXZF3vWr-AZV3wbgQmpSD_jWA/__IzVW8uba8jmuXoHAHLeW676pH7qgpc/UUJkc6w8H92PVfxq6bsCrV6UFEeJFivT/dSHQx4As55tgK8TEIS_y_j6AXSE723rL/uqqjhBuWGeUlv4lsNrEdjCQb6sSm1OGk/zf0XTLlFOXg.jpg')"></div>
+        <div class="stop__veil"></div>
+        <div class="stop__question-wrap">
+          <div>
+            <p class="stop__meta">Локация · Тайга</p>
+            <h2 class="stop__question">Что останется за окном, когда стемнеет?</h2>
+            <p class="stop__feel">Тайга. Тишина — настолько громкая, что сначала пугает. Звёзды, которых не видно в городе.</p>
+          </div>
+        </div>
+      </div>
+      <div class="stop__panel stop__panel--dark">
+        <p class="stop__present">600 метров над уровнем моря. Сибирская тайга вокруг. Никакого фонового шума города — только ветер в елях. Выключите телефон и посмотрите в окно.</p>
+        <p class="stop__practical">Характер места</p>
+        <div class="tiles">
+          <article class="tile"><h3 class="tile__name">600 м</h3><p class="tile__desc">Мягкий климат без изнуряющей жары</p></article>
+          <article class="tile"><h3 class="tile__name">50 км</h3><p class="tile__desc">Грунтовка — и вы в тайге</p></article>
+          <article class="tile"><h3 class="tile__name">0 шума</h3><p class="tile__desc">Городской фон остаётся далеко</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="stop closing-stop" id="closing">
+      <div class="stop__panel">
+        <p class="stop__meta" style="color:var(--accent)">Если вы уже представили</p>
+        <h2 class="stop__question" style="color:#fff;margin-bottom:20px">Пора решить практические вопросы</h2>
+        <p class="stop__present">Как добраться, где остановиться, когда приехать. Последние 50 км — грунтовка, мы будем на связи.</p>
+        <div class="btn-row">
+          <a href="#" class="btn">Забронировать номер</a>
+          <a href="#" class="btn btn--ghost">Как добраться</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="proto">Прототип 2 · <a href="hub.html">Все варианты</a></div>
+
+  <script>
+    const journey = document.getElementById('journey');
+    const stops = document.querySelectorAll('.stop[id]');
+    const trailLinks = document.querySelectorAll('.trail__stop');
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in-view');
+          const id = e.target.id;
+          trailLinks.forEach(l => l.classList.toggle('active', l.dataset.stop === id));
+        }
+      });
+    }, { root: journey, threshold: 0.4 });
+
+    stops.forEach(s => obs.observe(s));
+  </script>
+</body>
+</html>

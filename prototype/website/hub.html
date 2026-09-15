@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Горная Саланга — три прототипа нового сайта</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --forest: #1a3328; --snow: #f6f4f0; --copper: #a86b42; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--snow);
+      color: #141412;
+      min-height: 100vh;
+      padding: 48px 24px 80px;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+    .lead { color: #5a5652; max-width: 52ch; line-height: 1.7; margin-bottom: 48px; }
+    .grid { display: grid; gap: 24px; }
+    @media (min-width: 700px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+    .card {
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid #e8e3db;
+      overflow: hidden;
+      transition: border-color .3s, transform .3s;
+    }
+    .card:hover { border-color: var(--forest); transform: translateY(-2px); }
+    .card__img {
+      aspect-ratio: 4/3;
+      background-size: cover;
+      background-position: center;
+    }
+    .card__body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+    .card__tag {
+      font-size: .65rem;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 8px;
+    }
+    .card__title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+    .card__desc { font-size: .875rem; color: #5a5652; line-height: 1.6; flex: 1; margin-bottom: 20px; }
+    .card__link {
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--forest);
+    }
+    .note {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #e8e3db;
+      font-size: .8rem;
+      color: #8a8480;
+      line-height: 1.7;
+    }
+    .note a { color: var(--forest); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Три прототипа нового salanga.ru</h1>
+    <p class="lead">
+      Один сценарий — «прожить несколько дней в Саланге» — три разных визуальных языка.
+      Фото из <a href="https://gallery.salanga.ru/disk/zimniy-otdyh-v-gornoy-salange-pklb0n">зимней галереи</a>.
+    </p>
+
+    <div class="grid">
+      <a href="narrative.html" class="card">
+        <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq7jBqGIcD_4_/4ONJd1TfsAC6ZWZ9qpf4_2xYvOXCxzqz/aBp39U09MmKwuejSJcPLfNseDaYmkPTt/URxlGB-aeWhvs31xNXmaQZEizPzV5i1j/Afhm7i8-1zGlNUW7u-BEniy8bpFjxwq2/zMD7upo4dSNKEp4Z0ZoZ2VAq42-dOcjm/02l5zpCiIf2O1MSdNMek315TW5in_A_I/w2G1yePsuJKNhvP5DDIvXmFGrgZiDcEZ/8TUgoZi18TKRiDkzNeuODFbMmmkQ4FlE/RuLa8LIdf3g.jpg')"></div>
+        <div class="card__body">
+          <p class="card__tag">Прототип 1</p>
+          <h2 class="card__title">Рассказ</h2>
+          <p class="card__desc">Литературный scroll: мягкая типографика, главы дня, сначала атмосфера — потом практика. Минимальный интерфейс.</p>
+          <span class="card__link">Открыть →</span>
+        </div>
+      </a>
+
+      <a href="walk.html" class="card">
+        <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq4jYMX5XD6au/Byz9m_ne5iA_MEb1kkFH_iqXJkOzpBkH/WJYLwPQWRfEzh4KsKczzsqGu0HpDcYDD/lEQnzHnljr2gfNLo_lM8aOuIQni8hSgk/tFo5WCP-ysqf0Bqv-fwNwGn6yPibA9g6/hk1IawzKiI5xs9XhtfbWFUmeqvcUk4NN/XI4NjrJROQLwMsHaGNG8bJRbIwwDxwHj/ffJhiuH7VRmiK_TmimTL5RVrljLE4Lbg/-rBmE7idT0EiLjt1UCLVU9fyOWNRgPUx/C3WZDirczQo.jpg')"></div>
+        <div class="card__body">
+          <p class="card__tag">Прототип 2</p>
+          <h2 class="card__title">Прогулка</h2>
+          <p class="card__desc">Snap-scroll по локациям: тропа слева, каждая остановка — полный экран. Ощущение маршрута по курорту.</p>
+          <span class="card__link">Открыть →</span>
+        </div>
+      </a>
+
+      <a href="cinema.html" class="card">
+        <div class="card__img" style="background-image:url('https://i.wfolio.ru/x/KfN2JhbB89-m6UeUSQ-43b-4LTDPyZVn/q6sVLUvjujnOk6mXbO2srbIKpPlcOqy0/t7rVx8PT5NFW95R5iPfYgEbcz9T9DM03/mjHu5nb3MiY0pLaVSfnIEvvsgGTLYWd3/DB3ADSLxnrANMZCME7ysO6EaHtdU2K6M/CAXd_bLg2SwlPquBNEqrVcdBUJdIy-z9/9AUJa9TTg-sdi7vvDUnzN79VbM38_4V8/zbWspVhUDd-nUloJgMkF-aA3xcfHQox3/I8e-WLQJluANeAMagXfdq5WeJis7di-6/KAcQR-LsnaTRRFQHIS2_kNAjqW_Zal3N/muMpP2KsigdFlbWGODoAn4Q0IMVMBSoq/j6LzeIS9iBS-tXSoJeIHsApxcTGvKGKM/cUUime-RXZF3vWr-AZV3wbgQmpSD_jWA/__IzVW8uba8jmuXoHAHLeW676pH7qgpc/UUJkc6w8H92PVfxq6bsCrV6UFEeJFivT/dSHQx4As55tgK8TEIS_y_j6AXSE723rL/uqqjhBuWGeUlv4lsNrEdjCQb6sSm1OGk/zf0XTLlFOXg.jpg')"></div>
+        <div class="card__body">
+          <p class="card__tag">Прототип 3</p>
+          <h2 class="card__title">Кино</h2>
+          <p class="card__desc">Тёмный кинематографичный стиль: крупная типографика, параллакс, драматичные контрасты. Премиальный вайб.</p>
+          <span class="card__link">Открыть →</span>
+        </div>
+      </a>
+    </div>
+
+    <p class="note">
+      Структура общая для всех трёх: вопросы дня → погружение → практическая информация в конце.
+      Старый каталожный прототип: <a href="index.html">index.html</a>.
+      Прототипы не для публикации — только для обсуждения дизайна.
+    </p>
+  </div>
+</body>
+</html>

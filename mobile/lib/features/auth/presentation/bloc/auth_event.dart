@@ -53,3 +53,17 @@ final class AuthVerifyRequested extends AuthEvent {
 final class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
+
+final class AuthBiometricUnlockRequested extends AuthEvent {
+  const AuthBiometricUnlockRequested();
+}
+
+final class AuthBiometricEnabled extends AuthEvent {
+  const AuthBiometricEnabled({required this.email, required this.password});
+
+  final String email;
+  final String password;
+
+  @override
+  List<Object?> get props => [email, password];
+}

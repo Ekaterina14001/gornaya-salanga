@@ -23,6 +23,7 @@ final class AuthState extends Equatable {
     this.isLoading = false,
     this.errorMessage,
     this.pendingRegistration,
+    this.showBiometricLogin = false,
   });
 
   const AuthState.unknown() : this();
@@ -37,12 +38,14 @@ final class AuthState extends Equatable {
   final bool isLoading;
   final String? errorMessage;
   final PendingRegistration? pendingRegistration;
+  final bool showBiometricLogin;
 
   AuthState copyWith({
     AuthStatus? status,
     bool? isLoading,
     String? errorMessage,
     PendingRegistration? pendingRegistration,
+    bool? showBiometricLogin,
     bool clearError = false,
     bool clearPendingRegistration = false,
   }) {
@@ -53,9 +56,11 @@ final class AuthState extends Equatable {
       pendingRegistration: clearPendingRegistration
           ? null
           : (pendingRegistration ?? this.pendingRegistration),
+      showBiometricLogin: showBiometricLogin ?? this.showBiometricLogin,
     );
   }
 
   @override
-  List<Object?> get props => [status, isLoading, errorMessage, pendingRegistration];
+  List<Object?> get props =>
+      [status, isLoading, errorMessage, pendingRegistration, showBiometricLogin];
 }

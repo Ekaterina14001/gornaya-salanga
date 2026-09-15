@@ -1,95 +1,85 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { api, unwrap, type ApiEnvelope } from '@/core/api/axios'
 import { ru } from '@/i18n/ru'
-import { useState } from 'react'
+
+type PosKey = Record<string, unknown>
+type PosIntegration = {
+  apiUrl?: string
+  companyId?: string | number
+  timeoutSeconds?: number
+  serverKeys?: PosKey[]
+}
+
+async function copyText(value: string) {
+  try {
+    await navigator.clipboard.writeText(value)
+    toast.success('Скопировано')
+  } catch {
+    toast.error('Не удалось скопировать')
+  }
+}
+
+function CopyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-sm font-medium">{label}</p>
+      <div className="flex items-center gap-2">
+        <code className="flex-1 break-all rounded-md border bg-muted px-3 py-2 text-sm">{value || '—'}</code>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          disabled={!value}
+          onClick={() => void copyText(value)}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 export function PosIntegrationPage() {
-  const [system, setSystem] = useState('Shelter')
-  const queryClient = useQueryClient()
-
   const keysQuery = useQuery({
     queryKey: ['pos-keys'],
     queryFn: async () => {
-      const { data } = await api.get<ApiEnvelope<Array<Record<string, unknown>>>>('/api/admin/pos/keys')
+      const { data } = await api.get<ApiEnvelope<PosIntegration>>('/api/admin/pos/keys')
       return unwrap(data)
     },
   })
 
-  const logsQuery = useQuery({
-    queryKey: ['pos-logs'],
-    queryFn: async () => {
-      const { data } = await api.get<ApiEnvelope<{ items: Array<Record<string, unknown>>; total: number }>>('/api/admin/pos/logs')
-      return unwrap(data)
-    },
-  })
-
-  const createKey = useMutation({
-    mutationFn: async () => {
-      const { data } = await api.post<ApiEnvelope<Record<string, unknown>>>('/api/admin/pos/keys', { system })
-      return unwrap(data)
-    },
-    onSuccess: (data) => {
-      toast.success(`Ключ создан: ${String(data.prefix ?? '')}…`)
-      void queryClient.invalidateQueries({ queryKey: ['pos-keys'] })
-    },
-    onError: () => toast.error('Ошибка'),
-  })
-
-  const revokeKey = useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/api/admin/pos/keys/${id}`)
-    },
-    onSuccess: () => {
-      toast.success('Ключ отозван')
-      void queryClient.invalidateQueries({ queryKey: ['pos-keys'] })
-    },
-  })
+  const apiUrl = keysQuery.data?.apiUrl ?? ''
+  const companyId = keysQuery.data?.companyId != null ? String(keysQuery.data.companyId) : ''
+  const timeoutSeconds = keysQuery.data?.timeoutSeconds ?? 15
+  const serverKeys = keysQuery.data?.serverKeys ?? []
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">{ru.posIntegration}</h1>
+
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">API-ключи POS</CardTitle>
+          <CardTitle className="text-base">Касса — вкладка «Бонусная система UDS»</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input value={system} onChange={(e) => setSystem(e.target.value)} placeholder="Shelter / Bars / RKeeper" />
-            <Button onClick={() => createKey.mutate()} disabled={createKey.isPending}>
-              Создать ключ
-            </Button>
-          </div>
-          <ul className="space-y-2 text-sm">
-            {(keysQuery.data ?? []).map((key) => (
-              <li key={String(key.id)} className="flex items-center justify-between rounded border p-2">
-                <span>
-                  {String(key.system)} — {String(key.prefix)}…
-                </span>
-                <Button size="sm" variant="destructive" onClick={() => revokeKey.mutate(String(key.id))}>
-                  Отозвать
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Журнал запросов</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-1 text-sm">
-            {(logsQuery.data?.items ?? []).map((log, i) => (
-              <li key={i} className="rounded border p-2">
-                {JSON.stringify(log)}
-              </li>
-            ))}
-            {!logsQuery.data?.items?.length && <p className="text-muted-foreground">{ru.noData}</p>}
-          </ul>
+          {keysQuery.isLoading && <p className="text-sm text-muted-foreground">{ru.loading}</p>}
+          <CopyRow label="Адрес API" value={apiUrl} />
+          <CopyRow label="ИД компании" value={companyId} />
+          <CopyRow label="Таймаут" value={String(timeoutSeconds)} />
+          {serverKeys.map((key) => (
+            <CopyRow
+              key={String(key.id)}
+              label={`API ключ — ${String(key.system)}`}
+              value={String(key.apiKey ?? '')}
+            />
+          ))}
+          {!keysQuery.isLoading && serverKeys.length === 0 && (
+            <p className="text-sm text-muted-foreground">{ru.noData}</p>
+          )}
         </CardContent>
       </Card>
     </div>
