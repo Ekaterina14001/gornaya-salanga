@@ -98,8 +98,10 @@ func main() {
 	posSvc := service.NewPOSService(bonusRepo, userRepo, posRepo, cfg)
 	udsRepo := repository.NewUDSRepository(pool)
 	udsSvc := service.NewUDSService(bonusRepo, userRepo, udsRepo, authSvc, cfg)
+	fcRepo := repository.NewFarCardsRepository(pool)
+	fcSvc := service.NewFarCardsService(bonusRepo, userRepo, udsRepo, authSvc, fcRepo)
 
-	h := handler.NewHandler(authSvc, userSvc, bonusSvc, contentSvc, notifSvc, adminSvc, posSvc, udsSvc, cfg, jwtManager, redisClient)
+	h := handler.NewHandler(authSvc, userSvc, bonusSvc, contentSvc, notifSvc, adminSvc, posSvc, udsSvc, fcSvc, cfg, jwtManager, redisClient)
 
 	engine := router.Setup(cfg, jwtManager, h, posRepo)
 

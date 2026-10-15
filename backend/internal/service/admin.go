@@ -176,14 +176,43 @@ func (s *AdminService) ListPOSKeys(ctx context.Context) (map[string]any, error) 
 	if companyID == "" {
 		companyID = "1"
 	}
+	base := strings.TrimRight(s.cfg.PublicAPIURL, "/")
 	return map[string]any{
-		"apiUrl":          strings.TrimRight(s.cfg.PublicAPIURL, "/") + "/api/partner/v2",
-		"companyId":       companyID,
-		"timeoutSeconds":  15,
-		"endpoints":       posEndpoints(),
-		"serverKeys":      serverKeys,
-		"keys":            dbKeys,
+		"apiUrl":         base + "/api/partner/v2",
+		"companyId":      companyID,
+		"timeoutSeconds": 15,
+		"uds": map[string]any{
+			"apiUrl":         base + "/api/partner/v2",
+			"companyId":      companyID,
+			"timeoutSeconds": 15,
+			"auth":           "HTTP Basic: «ИД компании : API-ключ»",
+		},
+		"farcards": map[string]any{
+			"baseUrl":            base + "/api/farcards",
+			"getCardInfoExPath":  "/getcardinfoex",
+			"transactionsExPath": "/transactionsex",
+			"findByQrPath":       "/findbyqr",
+			"auth":               "HTTP-заголовок X-API-Key (ключ системы RKeeper)",
+			"cardCodeHint":       "Card / CardCode = числовой ID участника (uds_participants.id). Получить через findbyqr (Kind=3) по QR из приложения.",
+			"extDllHttpIni": map[string]string{
+				"Address":        base,
+				"GetCardInfoEx":  "/api/farcards/getcardinfoex",
+				"TransactionsEx": "/api/farcards/transactionsex",
+			},
+			"endpoints": farCardsEndpoints(),
+		},
+		"endpoints":  posEndpoints(),
+		"serverKeys": serverKeys,
+		"keys":       dbKeys,
 	}, nil
+}
+
+func farCardsEndpoints() []map[string]string {
+	return []map[string]string{
+		{"method": "POST", "path": "/api/farcards/getcardinfoex", "header": "X-API-Key"},
+		{"method": "POST", "path": "/api/farcards/transactionsex", "header": "X-API-Key"},
+		{"method": "POST", "path": "/api/farcards/findbyqr", "header": "X-API-Key", "note": "Kind=3, FindText=JWT из QR"},
+	}
 }
 
 func posEndpoints() []map[string]string {

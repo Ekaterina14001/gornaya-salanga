@@ -119,6 +119,10 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 	partnerAPI.Use(middleware.UDSBasic(cfg.UDSCompanyID, posRepo, cfg.PosAPIKeys), middleware.POSRequestLogger(posRepo))
 	registerUDSPartner(partnerAPI, h)
 
+	fc := r.Group("/api/farcards")
+	fc.Use(middleware.APIKeyWithDB(posRepo, cfg.PosAPIKeys), middleware.POSRequestLogger(posRepo))
+	registerFarCards(fc, h)
+
 	admin := r.Group("/api/admin")
 	admin.Use(middleware.JWT(jwtManager), middleware.AdminOnly())
 	{
@@ -163,6 +167,15 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 	}
 
 	return r
+}
+
+func registerFarCards(g *gin.RouterGroup, h *handler.Handler) {
+	g.POST("/getcardinfoex", h.FarCardsGetCardInfoEx)
+	g.POST("/getcardinfoex.php", h.FarCardsGetCardInfoEx)
+	g.POST("/transactionsex", h.FarCardsTransactionsEx)
+	g.POST("/transactionsex.php", h.FarCardsTransactionsEx)
+	g.POST("/findbyqr", h.FarCardsFindByQR)
+	g.POST("/findbyqr.php", h.FarCardsFindByQR)
 }
 
 func registerUDSPartner(partner *gin.RouterGroup, h *handler.Handler) {

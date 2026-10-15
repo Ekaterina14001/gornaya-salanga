@@ -16,6 +16,7 @@ type Handler struct {
 	admin   *service.AdminService
 	pos     *service.POSService
 	uds     *service.UDSService
+	farcards *service.FarCardsService
 	cfg     *config.Config
 	jwt     *jwtutil.Manager
 	redis   *redis.Client
@@ -30,12 +31,13 @@ func NewHandler(
 	admin *service.AdminService,
 	pos *service.POSService,
 	uds *service.UDSService,
+	farcards *service.FarCardsService,
 	cfg *config.Config,
 	jwt *jwtutil.Manager,
 	redis *redis.Client,
 ) *Handler {
 	return &Handler{
 		auth: auth, users: users, bonus: bonus, content: content,
-		notif: notif, admin: admin, pos: pos, uds: uds, cfg: cfg, jwt: jwt, redis: redis,
+		notif: notif, admin: admin, pos: pos, uds: uds, farcards: farcards, cfg: cfg, jwt: jwt, redis: redis,
 	}
 }
