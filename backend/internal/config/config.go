@@ -44,6 +44,7 @@ type Config struct {
 	SMTPFromName       string
 	AppPublicURL       string
 	PublicAPIURL       string
+	UploadDir          string
 	UDSCompanyID       string
 }
 
@@ -79,6 +80,7 @@ func Load() (*Config, error) {
 		SMTPFromName:       getEnv("SMTP_FROM_NAME", "Gornaya Salanga"),
 		AppPublicURL:       strings.TrimRight(getEnv("APP_PUBLIC_URL", "http://localhost:5173"), "/"),
 		PublicAPIURL:       strings.TrimRight(getEnv("PUBLIC_API_URL", ""), "/"),
+		UploadDir:          getEnv("UPLOAD_DIR", "uploads"),
 		UDSCompanyID:       strings.TrimSpace(getEnv("POS_UDS_COMPANY_ID", "1")),
 	}
 

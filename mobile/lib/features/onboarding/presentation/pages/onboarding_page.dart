@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/storage/hive_boxes.dart';
 import '../../../../core/theme/salanga_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/widgets/install_app_banner.dart';
 import '../../../../shared/widgets/salanga_brand_header.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -90,10 +89,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
       body: Column(
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: InstallAppBanner(compact: true),
-          ),
-          const Padding(
             padding: EdgeInsets.only(top: 8),
             child: SalangaBrandHeader(compact: true),
           ),
@@ -109,20 +104,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: SalangaColors.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: SalangaColors.sand, width: 2),
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: Image.asset(
-                          'assets/images/logo_mark.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+                      const SalangaBrandLogoCircle(),
                       const SizedBox(height: 32),
                       Text(
                         _text(l10n, slide.titleKey),

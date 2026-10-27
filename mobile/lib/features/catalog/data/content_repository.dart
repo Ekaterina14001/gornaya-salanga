@@ -69,7 +69,12 @@ class ContentRepository {
   }
 
   Future<List<dynamic>> fetchHeadliners({bool forceRefresh = false}) async {
-    return _fetchListCached('headliners_cache', '/api/content/headliners', forceRefresh);
+    return _fetchListCached(
+      'headliners_cache',
+      '/api/content/headliners',
+      forceRefresh,
+      ttl: const Duration(minutes: 1),
+    );
   }
 
   Future<Map<String, dynamic>> _fetchCached(
@@ -109,7 +114,12 @@ class ContentRepository {
       }
     }
     try {
-      final response = await _dio.get<dynamic>(path);
+      final response = await _dio.get<dynamic>(
+        path,
+        queryParameters: forceRefresh
+            ? {'_': DateTime.now().millisecondsSinceEpoch}
+            : null,
+      );
       final data = unwrapData(response.data);
       final List<dynamic> items;
       if (data is List) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/theme/salanga_colors.dart';
+import 'salanga_network_icon.dart';
 
 class SalangaBrandHeader extends StatelessWidget {
   const SalangaBrandHeader({
@@ -11,52 +10,24 @@ class SalangaBrandHeader extends StatelessWidget {
   });
 
   final bool compact;
+
+  /// Зарезервировано под подпись под логотипом (сейчас не используется).
   final bool showSubtitle;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: compact ? 56 : 72,
-          height: compact ? 56 : 72,
-          decoration: BoxDecoration(
-            color: SalangaColors.cream,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: SalangaColors.sand, width: 2),
-          ),
-          padding: const EdgeInsets.all(10),
-          child: Image.asset(
-            'assets/images/logo_mark.png',
-            fit: BoxFit.contain,
-          ),
-        ),
-        SizedBox(height: compact ? 12 : 16),
-        Text(
-          'Горная Саланга',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.ptSerif(
-            fontSize: compact ? 24 : 28,
-            fontWeight: FontWeight.w700,
-            color: SalangaColors.textDark,
-            height: 1.1,
-          ),
-        ),
-        if (showSubtitle) ...[
-          const SizedBox(height: 4),
-          Text(
-            'таёжный курорт',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.openSans(
-              fontSize: compact ? 14 : 15,
-              fontWeight: FontWeight.w500,
-              color: SalangaColors.warmBrown,
-              letterSpacing: 0.4,
-            ),
-          ),
-        ],
-      ],
-    );
+    return SalangaNetworkIcon(size: compact ? 88 : 112);
+  }
+}
+
+/// Круглый логотип для онбординга и экранов входа.
+class SalangaBrandLogoCircle extends StatelessWidget {
+  const SalangaBrandLogoCircle({super.key, this.size = 120});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SalangaNetworkIcon(size: size);
   }
 }

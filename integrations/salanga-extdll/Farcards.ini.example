@@ -1,0 +1,15 @@
+; Пример для каталога FarCards 6.05 (рядом с FarCards.exe).
+; Скопируйте SalangaExtDll.dll и SalangaExtDll.ini в этот каталог.
+
+[FarServer]
+Type=1
+DLL=SalangaExtDll
+Log=3
+XMLCP=1251
+
+[LinkDLL]
+1=pds_netk
+
+[pds_netk]
+ininame=pds_netk.ini
+NetServerName=FARCARDS_NETNAME

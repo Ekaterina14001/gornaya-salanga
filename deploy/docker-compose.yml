@@ -49,8 +49,11 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      UPLOAD_DIR: /app/uploads
     volumes:
       - ../backend/secrets/fcm-service-account.json:/app/secrets/fcm-service-account.json:ro
+      - api_uploads:/app/uploads
     ports:
       - target: 8080
         published: ${API_PUBLISH_PORT:-8080}
@@ -75,7 +78,8 @@ services:
       context: ../admin
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${PUBLIC_API_URL:?set PUBLIC_API_URL in .env}
+        # Пустой VITE_API_URL — axios бьёт в тот же host, что открыл админку (nginx → api).
+        VITE_API_URL: ${VITE_API_URL:-}
     restart: unless-stopped
     ports:
       - target: 80
@@ -105,3 +109,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  api_uploads:

@@ -15,7 +15,9 @@ Thumbs.db
 
 # Backend
 backend/bin/
+backend/api.exe
 backend/tmp/
+backend/uploads/
 backend/secrets/*.json
 !backend/secrets/.gitkeep
 
@@ -36,3 +38,11 @@ admin/.env
 
 # Demo APK output
 dist/
+
+# FarCards SDK extract (FC 6.05.7z) and native ExtDll build output
+integrations/farcards-6.05/
+build/salanga-extdll/
+integrations/salanga-extdll/build/
+*.tar
+admin-sync.tar
+mobile/web-build.tar

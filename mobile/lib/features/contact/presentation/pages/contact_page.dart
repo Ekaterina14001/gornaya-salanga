@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/salanga_colors.dart';
+import '../../../../shared/widgets/salanga_asset_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/contact_repository.dart';
 
@@ -87,40 +90,68 @@ class _ContactPageState extends State<ContactPage> {
     }
   }
 
+  InputDecoration _fieldDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: GoogleFonts.openSans(
+        color: SalangaColors.warmBrown,
+        fontSize: 16,
+      ),
+      filled: true,
+      fillColor: SalangaColors.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: SalangaColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: SalangaColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: SalangaColors.warmBrown, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final dateFormat = DateFormat('d MMM yyyy, HH:mm', 'ru');
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.contact)),
+      backgroundColor: SalangaColors.pageBackground,
+      appBar: AppBar(
+        title: Text(l10n.contact),
+        backgroundColor: SalangaColors.pageBackground,
+      ),
       body: RefreshIndicator(
         onRefresh: _loadMessages,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
             Text(
-              'Свяжитесь с администрацией курорта',
-              style: Theme.of(context).textTheme.titleMedium,
+              'Свяжитесь с нами',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ptSerif(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: SalangaColors.textDark,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             TextField(
               controller: _subjectController,
-              decoration: const InputDecoration(
-                labelText: 'Тема',
-                border: OutlineInputBorder(),
-              ),
+              decoration: _fieldDecoration('тема'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _bodyController,
               maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: 'Сообщение',
-                border: OutlineInputBorder(),
-              ),
+              decoration: _fieldDecoration('сообщение'),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -131,17 +162,45 @@ class _ContactPageState extends State<ContactPage> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(_success!, style: const TextStyle(color: Colors.green)),
               ),
-            FilledButton(
-              onPressed: _sending ? null : _submit,
-              child: _sending
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Отправить'),
+            Center(
+              child: Material(
+                color: SalangaColors.burgundy,
+                borderRadius: BorderRadius.circular(28),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: _sending ? null : _submit,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+                    child: _sending
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : Text(
+                            'отправить',
+                            style: GoogleFonts.openSans(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Opacity(
+                opacity: 0.55,
+                child: SalangaAssetIcon(
+                  asset: SalangaAssets.branch,
+                  size: 120,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Text('Мои обращения', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             if (_loading)

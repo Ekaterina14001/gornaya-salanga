@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { BannerImageUpload } from '@/components/BannerImageUpload'
+import {
+  defaultHomeBannerImage,
+  nextSortOrderForNew,
+  slotLabel,
+} from '@/lib/homeBannerDefaults'
 import { api, unwrap, type ApiEnvelope } from '@/core/api/axios'
 import { ru } from '@/i18n/ru'
 
@@ -16,6 +22,59 @@ type Headliner = {
   linkUrl?: string
   sortOrder?: number
   active?: boolean
+}
+
+function activeHeadliners(items: Headliner[] | undefined): Headliner[] {
+  return (items ?? [])
+    .filter((h) => h.active !== false)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+}
+
+function HeadlinerEditor({
+  item,
+  onPatch,
+  onSave,
+  onRemove,
+  extraActions,
+}: {
+  item: Headliner
+  onPatch: (patch: Partial<Headliner>) => void
+  onSave: () => void
+  onRemove: () => void
+  extraActions?: ReactNode
+}) {
+  const sort = item.sortOrder ?? 0
+  return (
+    <div className="grid gap-2 rounded border p-3 md:grid-cols-2">
+      <div className="flex flex-wrap items-center gap-2 md:col-span-2">
+        <p className="text-sm font-medium">{slotLabel(sort)}</p>
+        {extraActions}
+      </div>
+      <Input
+        value={item.title ?? ''}
+        onChange={(e) => onPatch({ title: e.target.value })}
+        placeholder="Заголовок (необязательно)"
+      />
+      <Input
+        value={item.linkUrl ?? ''}
+        onChange={(e) => onPatch({ linkUrl: e.target.value })}
+        placeholder="Ссылка по нажатию (необязательно)"
+      />
+      <BannerImageUpload
+        value={item.imageUrl ?? ''}
+        previewFallbackUrl={defaultHomeBannerImage(sort)}
+        onChange={(url) => onPatch({ imageUrl: url })}
+      />
+      <div className="flex flex-wrap gap-2 md:col-span-2">
+        <Button size="sm" onClick={onSave}>
+          {ru.save}
+        </Button>
+        <Button size="sm" variant="outline" onClick={onRemove}>
+          Удалить
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 function HeadlinersSection() {
@@ -30,21 +89,41 @@ function HeadlinersSection() {
     },
   })
 
+  useEffect(() => {
+    if (query.data) {
+      setDraft((d) => ({ ...d, sortOrder: nextSortOrderForNew(query.data) }))
+    }
+  }, [query.data])
+
   const create = useMutation({
     mutationFn: async () => {
       await api.post('/api/admin/content/headliners', draft)
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Баннер добавлен')
-      setDraft({ title: '', subtitle: '', imageUrl: '', linkUrl: '', sortOrder: 0 })
-      void queryClient.invalidateQueries({ queryKey: ['admin-headliners'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-headliners'] })
+      const items = queryClient.getQueryData<Headliner[]>(['admin-headliners'])
+      setDraft({
+        title: '',
+        subtitle: '',
+        imageUrl: '',
+        linkUrl: '',
+        sortOrder: nextSortOrderForNew(items),
+      })
     },
     onError: () => toast.error('Ошибка'),
   })
 
   const update = useMutation({
     mutationFn: async (item: Headliner) => {
-      await api.put(`/api/admin/content/headliners/${item.id}`, item)
+      await api.put(`/api/admin/content/headliners/${item.id}`, {
+        title: item.title ?? '',
+        subtitle: item.subtitle ?? '',
+        imageUrl: item.imageUrl ?? '',
+        linkUrl: item.linkUrl ?? '',
+        sortOrder: item.sortOrder ?? 0,
+        active: item.active,
+      })
     },
     onSuccess: () => {
       toast.success('Сохранено')
@@ -58,92 +137,146 @@ function HeadlinersSection() {
       await api.delete(`/api/admin/content/headliners/${id}`)
     },
     onSuccess: () => {
-      toast.success('Баннер скрыт')
+      toast.success('Баннер удалён')
       void queryClient.invalidateQueries({ queryKey: ['admin-headliners'] })
     },
     onError: () => toast.error('Ошибка'),
   })
 
+  const patchHeadliner = (id: string, patch: Partial<Headliner>) => {
+    queryClient.setQueryData<Headliner[]>(['admin-headliners'], (old) =>
+      old?.map((h) => (h.id === id ? { ...h, ...patch } : h)),
+    )
+  }
+
+  const headlinerById = (id: string): Headliner | undefined =>
+    queryClient.getQueryData<Headliner[]>(['admin-headliners'])?.find((h) => h.id === id)
+
+  const moveCarousel = (id: string, direction: -1 | 1) => {
+    const carousel = activeHeadliners(queryClient.getQueryData<Headliner[]>(['admin-headliners'])).filter(
+      (h) => (h.sortOrder ?? 0) > 0,
+    )
+    const index = carousel.findIndex((h) => h.id === id)
+    const target = index + direction
+    if (index < 0 || target < 0 || target >= carousel.length) return
+    const a = carousel[index]
+    const b = carousel[target]
+    const aOrder = a.sortOrder ?? 0
+    const bOrder = b.sortOrder ?? 0
+    patchHeadliner(a.id, { sortOrder: bOrder })
+    patchHeadliner(b.id, { sortOrder: aOrder })
+    const freshA = { ...a, sortOrder: bOrder }
+    const freshB = { ...b, sortOrder: aOrder }
+    update.mutate(freshA)
+    update.mutate(freshB)
+  }
+
+  const active = activeHeadliners(query.data)
+  const topBanners = active.filter((h) => (h.sortOrder ?? 0) === 0)
+  const carouselBanners = active.filter((h) => (h.sortOrder ?? 0) > 0)
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Баннеры на главной (headliners)</CardTitle>
+        <CardTitle className="text-base">Баннеры на главной</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Карусель на главном экране приложения. Внутренние ссылки: /bonus, /catalog.
+          Сначала настройте верхний баннер (слот 0) с кнопкой «Забронировать». Все остальные изображения
+          попадают в нижнюю карусель (слоты 1, 2, 3…) и листаются свайпом в приложении. Текст на баннере
+          необязателен. Ссылки: /bonus, /catalog или https://…
         </p>
-        {query.data?.map((item) => (
-          <div key={item.id} className="grid gap-2 rounded border p-3 md:grid-cols-2">
-            <Input
-              value={item.title}
-              onChange={(e) =>
-                queryClient.setQueryData<Headliner[]>(['admin-headliners'], (old) =>
-                  old?.map((h) => (h.id === item.id ? { ...h, title: e.target.value } : h)),
-                )
-              }
-              placeholder="Заголовок"
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">1. Верхний баннер</h3>
+          {topBanners.length > 1 && (
+            <p className="text-sm text-destructive">
+              Несколько баннеров с порядком 0 — в приложении показывается только первый. Удалите лишние или
+              сохраните один.
+            </p>
+          )}
+          {topBanners.length === 0 && (
+            <p className="text-sm text-muted-foreground">Верхний баннер не задан — добавьте ниже.</p>
+          )}
+          {topBanners.map((item) => (
+            <HeadlinerEditor
+              key={item.id}
+              item={item}
+              onPatch={(patch) => patchHeadliner(item.id, patch)}
+              onSave={() => {
+                const fresh = headlinerById(item.id)
+                if (fresh) update.mutate(fresh)
+              }}
+              onRemove={() => remove.mutate(item.id)}
             />
-            <Input
-              value={item.subtitle ?? ''}
-              onChange={(e) =>
-                queryClient.setQueryData<Headliner[]>(['admin-headliners'], (old) =>
-                  old?.map((h) => (h.id === item.id ? { ...h, subtitle: e.target.value } : h)),
-                )
+          ))}
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">2. Нижняя карусель (свайп)</h3>
+          {carouselBanners.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Нет слайдов — нижний ряд в приложении скрыт, пока не добавите баннер с порядком 1 и выше.
+            </p>
+          )}
+          {carouselBanners.map((item, index) => (
+            <HeadlinerEditor
+              key={item.id}
+              item={item}
+              onPatch={(patch) => patchHeadliner(item.id, patch)}
+              onSave={() => {
+                const fresh = headlinerById(item.id)
+                if (fresh) update.mutate(fresh)
+              }}
+              onRemove={() => remove.mutate(item.id)}
+              extraActions={
+                <span className="flex gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={index === 0}
+                    onClick={() => moveCarousel(item.id, -1)}
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={index === carouselBanners.length - 1}
+                    onClick={() => moveCarousel(item.id, 1)}
+                  >
+                    ↓
+                  </Button>
+                </span>
               }
-              placeholder="Подзаголовок"
             />
-            <Input
-              value={item.imageUrl ?? ''}
-              onChange={(e) =>
-                queryClient.setQueryData<Headliner[]>(['admin-headliners'], (old) =>
-                  old?.map((h) => (h.id === item.id ? { ...h, imageUrl: e.target.value } : h)),
-                )
-              }
-              placeholder="URL изображения"
-            />
-            <Input
-              value={item.linkUrl ?? ''}
-              onChange={(e) =>
-                queryClient.setQueryData<Headliner[]>(['admin-headliners'], (old) =>
-                  old?.map((h) => (h.id === item.id ? { ...h, linkUrl: e.target.value } : h)),
-                )
-              }
-              placeholder="Ссылка"
-            />
-            <div className="flex gap-2 md:col-span-2">
-              <Button size="sm" onClick={() => update.mutate(item)}>
-                {ru.save}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => remove.mutate(item.id)}>
-                Скрыть
-              </Button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
         <div className="grid gap-2 rounded border border-dashed p-3 md:grid-cols-2">
+          <p className="text-sm font-medium md:col-span-2">
+            Новый баннер · {slotLabel(draft.sortOrder)}
+          </p>
           <Input
             value={draft.title}
             onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-            placeholder="Новый заголовок"
-          />
-          <Input
-            value={draft.subtitle}
-            onChange={(e) => setDraft((d) => ({ ...d, subtitle: e.target.value }))}
-            placeholder="Подзаголовок"
-          />
-          <Input
-            value={draft.imageUrl}
-            onChange={(e) => setDraft((d) => ({ ...d, imageUrl: e.target.value }))}
-            placeholder="URL изображения"
+            placeholder="Заголовок (необязательно)"
           />
           <Input
             value={draft.linkUrl}
             onChange={(e) => setDraft((d) => ({ ...d, linkUrl: e.target.value }))}
             placeholder="/bonus или https://..."
           />
-          <Button className="md:col-span-2" onClick={() => create.mutate()} disabled={!draft.title || create.isPending}>
-            Добавить баннер
+          <BannerImageUpload
+            value={draft.imageUrl}
+            previewFallbackUrl={defaultHomeBannerImage(draft.sortOrder)}
+            onChange={(url) => setDraft((d) => ({ ...d, imageUrl: url }))}
+          />
+          <Button
+            className="md:col-span-2"
+            onClick={() => create.mutate()}
+            disabled={create.isPending}
+          >
+            {draft.sortOrder === 0 ? 'Добавить верхний баннер' : 'Добавить слайд в карусель'}
           </Button>
         </div>
       </CardContent>

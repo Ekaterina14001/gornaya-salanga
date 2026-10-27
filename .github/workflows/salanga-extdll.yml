@@ -1,0 +1,29 @@
+name: SalangaExtDll (Win32)
+
+on:
+  push:
+    paths:
+      - "integrations/salanga-extdll/**"
+      - ".github/workflows/salanga-extdll.yml"
+  pull_request:
+    paths:
+      - "integrations/salanga-extdll/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: integrations/salanga-extdll
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure CMake (Win32)
+        run: cmake -S . -B ../../build/salanga-extdll -A Win32
+      - name: Build Release
+        run: cmake --build ../../build/salanga-extdll --config Release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SalangaExtDll-win32
+          path: build/salanga-extdll/**/SalangaExtDll.dll

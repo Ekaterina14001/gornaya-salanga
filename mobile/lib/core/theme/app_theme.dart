@@ -40,7 +40,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: SalangaColors.surface,
+      scaffoldBackgroundColor: SalangaColors.pageBackground,
       textTheme: baseText.copyWith(
         headlineLarge: displayText.headlineLarge?.copyWith(
           color: SalangaColors.textHeading,
@@ -117,37 +117,33 @@ class AppTheme {
         fillColor: SalangaColors.surface,
         labelStyle: GoogleFonts.openSans(color: SalangaColors.warmBrown),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(2),
-          borderSide: const BorderSide(color: SalangaColors.sand, width: 2),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: SalangaColors.border, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(2),
-          borderSide: const BorderSide(color: SalangaColors.warmBrown, width: 2),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: SalangaColors.warmBrown, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(2),
-          borderSide: const BorderSide(color: SalangaColors.burgundyHover, width: 2),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: SalangaColors.burgundyHover, width: 1.5),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        height: 68,
-        backgroundColor: SalangaColors.cream,
-        indicatorColor: SalangaColors.green.withValues(alpha: 0.18),
+        height: 72,
+        backgroundColor: SalangaColors.navBar,
+        indicatorColor: SalangaColors.textDark.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return GoogleFonts.openSans(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            color: selected ? SalangaColors.greenDark : SalangaColors.textPrimary,
+            color: selected ? SalangaColors.textDark : SalangaColors.textPrimary,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
-          final selected = states.contains(WidgetState.selected);
-          return IconThemeData(
-            color: selected ? SalangaColors.greenDark : SalangaColors.warmBrown,
-            size: 24,
-          );
+          return const IconThemeData(size: 24);
         }),
       ),
       dividerTheme: const DividerThemeData(color: SalangaColors.sand, thickness: 1),

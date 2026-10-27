@@ -33,6 +33,11 @@ $target = Join-Path $PSScriptRoot ".env"
 $content = Get-Content $example -Raw
 $content = $content -replace 'PUBLIC_HOST=.*', 'PUBLIC_HOST=admin.salanga.ru'
 $content = $content -replace 'PUBLIC_API_URL=.*', "PUBLIC_API_URL=$apiUrl"
+if ($content -notmatch 'VITE_API_URL=') {
+  $content = $content + "`nVITE_API_URL=`n"
+} else {
+  $content = $content -replace 'VITE_API_URL=.*', 'VITE_API_URL='
+}
 $content = $content -replace 'API_BIND_HOST=0\.0\.0\.0', 'API_BIND_HOST=127.0.0.1'
 $content = $content -replace 'API_PUBLISH_PORT=8080', 'API_PUBLISH_PORT=8080'
 $content = $content -replace 'ADMIN_BIND_HOST=0\.0\.0\.0', 'ADMIN_BIND_HOST=127.0.0.1'

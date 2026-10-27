@@ -2,6 +2,8 @@ package router
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
@@ -43,6 +45,10 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 		corsCfg.AllowOrigins = cfg.CORSOrigins
 	}
 	r.Use(cors.New(corsCfg))
+
+	uploadDir, _ := filepath.Abs(cfg.UploadDir)
+	_ = os.MkdirAll(uploadDir, 0o755)
+	r.Static("/uploads", uploadDir)
 
 	r.GET("/health", h.Health)
 
@@ -92,6 +98,7 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 		content.GET("/lifts", h.GetLifts)
 		content.GET("/weather", h.GetWeather)
 		content.GET("/headliners", h.GetHeadliners)
+		content.GET("/banner-media", h.GetBannerMedia)
 	}
 
 	notifications := r.Group("/api/notifications")
@@ -148,6 +155,7 @@ func Setup(cfg *config.Config, jwtManager *jwtutil.Manager, h *handler.Handler, 
 		admin.POST("/content/headliners", h.AdminCreateHeadliner)
 		admin.PUT("/content/headliners/:id", h.AdminUpdateHeadliner)
 		admin.DELETE("/content/headliners/:id", h.AdminDeleteHeadliner)
+		admin.POST("/content/upload", h.AdminUploadContentImage)
 		admin.PUT("/content/services/:id", h.AdminUpdateService)
 		admin.DELETE("/content/services/:id", h.AdminDeleteService)
 		admin.POST("/content/webcams", h.AdminCreateWebcam)

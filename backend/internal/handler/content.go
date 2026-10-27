@@ -76,7 +76,32 @@ func (h *Handler) GetWeather(c *gin.Context) {
 	response.OK(c, data)
 }
 
+func clientPublicBase(c *gin.Context) string {
+	scheme := "https"
+	if p := strings.TrimSpace(c.GetHeader("X-Forwarded-Proto")); p != "" {
+		scheme = p
+	} else if c.Request.TLS == nil {
+		scheme = "http"
+	}
+	host := strings.TrimSpace(c.Request.Host)
+	if xh := strings.TrimSpace(c.GetHeader("X-Forwarded-Host")); xh != "" {
+		host = strings.TrimSpace(strings.Split(xh, ",")[0])
+	}
+	if host == "" {
+		return ""
+	}
+	return scheme + "://" + host
+}
+
 func (h *Handler) GetHeadliners(c *gin.Context) {
-	data, _ := h.content.GetHeadliners(c.Request.Context())
+	apiBase := clientPublicBase(c)
+	if apiBase == "" {
+		apiBase = h.cfg.ResolvePublicAPIURL(c.Request.URL.Scheme, c.Request.Host)
+	}
+	data, err := h.content.GetHeadliners(c.Request.Context(), apiBase)
+	if err != nil {
+		response.Internal(c, "headliners failed")
+		return
+	}
 	response.OK(c, data)
 }

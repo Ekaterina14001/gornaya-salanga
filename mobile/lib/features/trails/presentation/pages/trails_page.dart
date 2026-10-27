@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/salanga_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/error_placeholder.dart';
 import '../../../../shared/widgets/skeleton_loader.dart';
+import '../../../../shared/widgets/trail_difficulty.dart';
 import '../../../catalog/data/content_repository.dart';
 
 class TrailsPage extends StatefulWidget {
@@ -48,21 +50,6 @@ class _TrailsPageState extends State<TrailsPage> {
     }
   }
 
-  Color _difficultyColor(String? difficulty) {
-    switch (difficulty) {
-      case 'green':
-        return Colors.green;
-      case 'blue':
-        return Colors.blue;
-      case 'red':
-        return Colors.red;
-      case 'black':
-        return Colors.black;
-      default:
-        return Colors.grey;
-    }
-  }
-
   String _formatTime(dynamic value) {
     if (value == null) return '';
     final text = value.toString();
@@ -91,7 +78,11 @@ class _TrailsPageState extends State<TrailsPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.trails)),
+      backgroundColor: SalangaColors.pageBackground,
+      appBar: AppBar(
+        title: Text(l10n.trails),
+        backgroundColor: SalangaColors.pageBackground,
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading
@@ -112,6 +103,8 @@ class _TrailsPageState extends State<TrailsPage> {
                 : ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
+                      const TrailDifficultyLegend(),
+                      const SizedBox(height: 20),
                       Text('Трассы', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
                       if (_trails.isEmpty)
@@ -120,17 +113,26 @@ class _TrailsPageState extends State<TrailsPage> {
                         ..._trails.map((t) {
                           final map = Map<String, dynamic>.from(t as Map);
                           final status = map['status'] as String? ?? 'closed';
+                          final diff = map['difficulty'] as String?;
                           return Card(
                             child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _difficultyColor(map['difficulty'] as String?),
-                                radius: 8,
+                              leading: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: TrailDifficulty.ringColor(diff),
+                                    width: 3,
+                                  ),
+                                ),
                               ),
                               title: Text(map['name'] as String? ?? ''),
-                              subtitle: Text('${map['difficulty'] ?? ''} • ${map['operatingHours'] ?? ''}'),
+                              subtitle: Text(TrailDifficulty.label(diff)),
                               trailing: Chip(
                                 label: Text(status == 'open' ? 'Открыта' : 'Закрыта'),
-                                backgroundColor: status == 'open' ? Colors.green.shade100 : Colors.red.shade100,
+                                backgroundColor:
+                                    status == 'open' ? Colors.green.shade100 : Colors.red.shade100,
                               ),
                             ),
                           );

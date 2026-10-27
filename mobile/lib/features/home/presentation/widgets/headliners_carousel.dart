@@ -2,47 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../catalog/data/content_repository.dart';
+import '../../../../core/network/media_url.dart';
+import '../../../../core/theme/salanga_colors.dart';
+import '../../../../shared/widgets/home_banner_constants.dart';
+import '../../../../shared/widgets/admin_banner_image.dart';
+import '../../../../shared/widgets/home_banner_defaults.dart';
 
-class HeadlinersCarousel extends StatefulWidget {
-  const HeadlinersCarousel({super.key});
+/// Нижние баннеры: свайп, виден следующий слайд, cover в плитке (как макет).
+class HeadlinersCarousel extends StatelessWidget {
+  const HeadlinersCarousel({required this.bottomBanners, super.key});
 
-  @override
-  State<HeadlinersCarousel> createState() => _HeadlinersCarouselState();
-}
+  final List<Map<String, dynamic>> bottomBanners;
 
-class _HeadlinersCarouselState extends State<HeadlinersCarousel> {
-  final _repo = ContentRepository();
-  final _pageController = PageController();
-  List<Map<String, dynamic>> _items = [];
-  int _page = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    try {
-      final data = await _repo.fetchHeadliners();
-      if (!mounted) return;
-      setState(() {
-        _items = data
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      });
-    } catch (_) {}
-  }
-
-  Future<void> _openLink(String? link) async {
+  Future<void> _openLink(BuildContext context, String? link) async {
     if (link == null || link.isEmpty) return;
     if (link.startsWith('http://') || link.startsWith('https://')) {
       final uri = Uri.tryParse(link);
@@ -52,142 +24,87 @@ class _HeadlinersCarouselState extends State<HeadlinersCarousel> {
       return;
     }
     if (link.startsWith('/')) {
-      if (!mounted) return;
-      context.go(link);
+      if (context.mounted) context.go(link);
     }
+  }
+
+  String? _imageUrl(Map<String, dynamic> item) {
+    final sort = HomeBannerDefaults.sortOrderFromJson(item['sortOrder'], fallback: 1);
+    final raw = item['imageUrl']?.toString();
+    final resolved = resolveBannerMediaUrl(HomeBannerDefaults.effective(raw, sort));
+    return resolved.isNotEmpty ? resolved : null;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_items.isEmpty) return const SizedBox.shrink();
+    if (bottomBanners.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: 160,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxW = constraints.maxWidth;
+        final multi = bottomBanners.length > 1;
+        final viewportFraction = multi
+            ? kHomeCarouselViewportFraction(maxW)
+            : 1.0;
+        final tileHeight = kHomeCarouselTileHeight(maxW);
+
+        return SizedBox(
+          height: tileHeight,
+          width: maxW,
           child: PageView.builder(
-            controller: _pageController,
-            itemCount: _items.length,
-            onPageChanged: (i) => setState(() => _page = i),
+            controller: PageController(viewportFraction: viewportFraction),
+            padEnds: false,
+            clipBehavior: Clip.none,
+            itemCount: bottomBanners.length,
             itemBuilder: (context, index) {
-              final item = _items[index];
-              final title = item['title']?.toString() ?? '';
-              final subtitle = item['subtitle']?.toString() ?? '';
-              final imageUrl = item['imageUrl']?.toString() ?? '';
+              final item = bottomBanners[index];
+              final url = _imageUrl(item);
               final link = item['linkUrl']?.toString();
+              final sort = HomeBannerDefaults.sortOrderFromJson(item['sortOrder'], fallback: 1);
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: link != null && link.isNotEmpty ? () => _openLink(link) : null,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (imageUrl.isNotEmpty)
-                          Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _gradientBackground(context),
-                          )
-                        else
-                          _gradientBackground(context),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.1),
-                                Colors.black.withValues(alpha: 0.55),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              if (subtitle.isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  subtitle,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Colors.white.withValues(alpha: 0.9),
-                                      ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                padding: EdgeInsets.only(
+                  right: index < bottomBanners.length - 1 ? kHomeBannerGap : 0,
+                ),
+                child: _AdminBannerTile(
+                  imageUrl: url,
+                  sortOrder: sort,
+                  onTap: link != null && link.isNotEmpty
+                      ? () => _openLink(context, link)
+                      : null,
                 ),
               );
             },
           ),
-        ),
-        if (_items.length > 1) ...[
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              _items.length,
-              (i) => AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: _page == i ? 18 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: _page == i
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
+        );
+      },
     );
   }
+}
 
-  Widget _gradientBackground(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primaryContainer,
-          ],
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.topRight,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Icon(
-            Icons.landscape,
-            size: 48,
-            color: Colors.white.withValues(alpha: 0.35),
+class _AdminBannerTile extends StatelessWidget {
+  const _AdminBannerTile({
+    required this.imageUrl,
+    required this.sortOrder,
+    this.onTap,
+  });
+
+  final String? imageUrl;
+  final int sortOrder;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(kHomeBannerRadius),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(kHomeBannerRadius),
+          child: ColoredBox(
+            color: SalangaColors.textDark,
+            child: AdminBannerImage(imageUrl: imageUrl, sortOrder: sortOrder),
           ),
         ),
       ),

@@ -316,8 +316,8 @@ func (h *Handler) AdminCreateHeadliner(c *gin.Context) {
 		LinkURL   string `json:"linkUrl"`
 		SortOrder int    `json:"sortOrder"`
 	}
-	if err := c.ShouldBindJSON(&body); err != nil || body.Title == "" {
-		response.BadRequest(c, "title required")
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.BadRequest(c, "invalid body")
 		return
 	}
 	data, err := h.admin.CreateHeadliner(c.Request.Context(), body.Title, body.Subtitle, body.ImageURL, body.LinkURL, body.SortOrder)

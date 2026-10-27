@@ -19,6 +19,8 @@ WORKDIR /app
 
 COPY --from=builder /out/api .
 
+RUN mkdir -p /app/uploads && chown nobody:nobody /app/uploads
+
 EXPOSE 8080
 
 USER nobody

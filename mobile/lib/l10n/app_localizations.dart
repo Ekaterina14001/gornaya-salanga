@@ -283,7 +283,7 @@ abstract class AppLocalizations {
   /// No description provided for @installAppIosHint.
   ///
   /// In ru, this message translates to:
-  /// **'Safari → Поделиться → «На экран Домой» → Добавить.'**
+  /// **'Чтобы убрать панели Safari: Поделиться (□↑) → «На экран Домой» → Добавить. Дальше открывайте только с иконки «Саланга» на экране.'**
   String get installAppIosHint;
 
   /// No description provided for @installAppAndroidHint.
@@ -319,7 +319,7 @@ abstract class AppLocalizations {
   /// No description provided for @contact.
   ///
   /// In ru, this message translates to:
-  /// **'Контакты'**
+  /// **'Написать'**
   String get contact;
 
   /// No description provided for @balance.

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gornaya-salanga/backend/internal/config"
+	"github.com/gornaya-salanga/backend/internal/content"
 	"github.com/gornaya-salanga/backend/internal/repository"
 	"github.com/redis/go-redis/v9"
 )
@@ -51,8 +52,15 @@ func (s *ContentService) GetLifts(ctx context.Context) ([]map[string]any, error)
 	return s.content.GetLifts(ctx)
 }
 
-func (s *ContentService) GetHeadliners(ctx context.Context) ([]map[string]any, error) {
-	return s.content.GetHeadliners(ctx)
+func (s *ContentService) GetHeadliners(ctx context.Context, apiBase string) ([]map[string]any, error) {
+	items, err := s.content.GetHeadliners(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return content.DefaultHeadlinersForApp(apiBase), nil
+	}
+	return content.EnrichHeadlinerImages(items, apiBase), nil
 }
 
 func (s *ContentService) GetWeather(ctx context.Context) (map[string]any, error) {

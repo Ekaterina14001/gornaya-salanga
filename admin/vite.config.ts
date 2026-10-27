@@ -11,5 +11,17 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      '/api': {
+        target: 'https://admin.salanga.ru',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/health': {
+        target: 'https://admin.salanga.ru',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
 })

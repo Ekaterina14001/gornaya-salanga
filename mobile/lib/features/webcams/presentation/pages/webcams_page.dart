@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/theme/salanga_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/error_placeholder.dart';
 import '../../../../shared/widgets/skeleton_loader.dart';
@@ -71,12 +73,26 @@ class _WebcamsPageState extends State<WebcamsPage> {
     return null;
   }
 
+  String? _previewUrl(Map<String, dynamic> cam) {
+    final raw = cam['previewUrl'] ?? cam['preview_url'] ?? cam['thumbnailUrl'];
+    if (raw is String && raw.isNotEmpty) return raw;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.webcams)),
+      backgroundColor: SalangaColors.pageBackground,
+      appBar: AppBar(
+        title: Text(
+          l10n.webcams,
+          style: GoogleFonts.ptSerif(fontWeight: FontWeight.w700, fontSize: 22),
+        ),
+        centerTitle: true,
+        backgroundColor: SalangaColors.pageBackground,
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading
@@ -97,28 +113,89 @@ class _WebcamsPageState extends State<WebcamsPage> {
                         ],
                       )
                     : ListView.separated(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                         itemCount: _webcams.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        separatorBuilder: (_, __) => const SizedBox(height: 28),
                         itemBuilder: (context, index) {
                           final cam = Map<String, dynamic>.from(_webcams[index] as Map);
                           final name = cam['name'] as String? ?? 'Камера';
-                          final location = cam['locationDescription'] as String? ??
-                              cam['location_description'] as String? ??
-                              '';
-                          return Card(
-                            child: ListTile(
-                              leading: const CircleAvatar(
-                                child: Icon(Icons.videocam),
+                          final preview = _previewUrl(cam);
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                name,
+                                style: GoogleFonts.openSans(
+                                  fontSize: 16,
+                                  color: SalangaColors.textDark,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                              title: Text(name),
-                              subtitle: location.isNotEmpty ? Text(location) : null,
-                              trailing: const Icon(Icons.play_circle_outline),
-                              onTap: () => _openCamera(cam),
-                            ),
+                              const SizedBox(height: 12),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _openCamera(cam),
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: AspectRatio(
+                                      aspectRatio: 16 / 10,
+                                      child: Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          if (preview != null)
+                                            Image.network(
+                                              preview,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => _previewFallback(),
+                                            )
+                                          else
+                                            _previewFallback(),
+                                          Center(
+                                            child: Container(
+                                              width: 52,
+                                              height: 52,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.white.withValues(alpha: 0.9),
+                                              ),
+                                              child: const Icon(
+                                                Icons.play_arrow_rounded,
+                                                size: 34,
+                                                color: SalangaColors.textDark,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ),
+      ),
+    );
+  }
+
+  Widget _previewFallback() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [SalangaColors.sand, SalangaColors.warmBrown],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.landscape_outlined,
+        size: 56,
+        color: Colors.white.withValues(alpha: 0.55),
       ),
     );
   }

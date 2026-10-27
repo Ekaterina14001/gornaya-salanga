@@ -1,0 +1,8 @@
+LIBRARY SalangaExtDll
+EXPORTS
+    Init
+    Done
+    GetCardInfoEx
+    TransactionsEx
+    FindAccountsByKind
+    AnyInfo

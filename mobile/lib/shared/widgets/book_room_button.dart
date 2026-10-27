@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/navigation/app_link.dart';
+import '../../core/network/media_url.dart';
 import '../../core/theme/salanga_colors.dart';
+import 'home_banner_constants.dart';
 import '../../l10n/app_localizations.dart';
+import 'admin_banner_image.dart';
+import 'salanga_asset_icon.dart';
 
 const kSalangaBookingUrl = 'https://www.salanga.ru/book/';
 
@@ -12,10 +16,13 @@ class BookRoomButton extends StatelessWidget {
     super.key,
     this.compact = false,
     this.fullWidth = true,
+    this.promoBar = false,
   });
 
   final bool compact;
   final bool fullWidth;
+  /// Полная ширина баннера, без скругления сверху (нижняя полоса на картинке).
+  final bool promoBar;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +31,7 @@ class BookRoomButton extends StatelessWidget {
     final child = _BookRoomButtonContent(
       label: l10n.bookRoom,
       compact: compact,
+      promoBar: promoBar,
       onPressed: () => openAppLink(context, kSalangaBookingUrl),
     );
 
@@ -37,11 +45,13 @@ class _BookRoomButtonContent extends StatefulWidget {
   const _BookRoomButtonContent({
     required this.label,
     required this.compact,
+    required this.promoBar,
     required this.onPressed,
   });
 
   final String label;
   final bool compact;
+  final bool promoBar;
   final VoidCallback onPressed;
 
   @override
@@ -54,28 +64,42 @@ class _BookRoomButtonContentState extends State<_BookRoomButtonContent> {
   Color get _background =>
       _pressed ? SalangaColors.burgundyHover : SalangaColors.burgundy;
 
+  double get _iconSize {
+    if (widget.promoBar) return 28;
+    return widget.compact ? 22 : 26;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final radius = widget.promoBar
+        ? const BorderRadius.only(
+            bottomLeft: Radius.circular(kHomeBannerRadius),
+            bottomRight: Radius.circular(kHomeBannerRadius),
+          )
+        : BorderRadius.circular(28);
+
     return Material(
       color: _background,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: radius,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: widget.onPressed,
         onHighlightChanged: (value) => setState(() => _pressed = value),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: widget.compact ? 16 : 20,
-            vertical: widget.compact ? 12 : 16,
+            horizontal: widget.promoBar ? 20 : (widget.compact ? 16 : 20),
+            vertical: widget.promoBar ? 14 : (widget.compact ? 12 : 16),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: widget.promoBar ? MainAxisSize.max : MainAxisSize.min,
             children: [
-              Icon(
-                Icons.hotel_outlined,
+              Image.asset(
+                SalangaAssets.bookRoom,
+                width: _iconSize,
+                height: _iconSize,
                 color: Colors.white,
-                size: widget.compact ? 22 : 26,
+                colorBlendMode: BlendMode.srcIn,
               ),
               const SizedBox(width: 10),
               Flexible(
@@ -84,7 +108,7 @@ class _BookRoomButtonContentState extends State<_BookRoomButtonContent> {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.openSans(
                     color: Colors.white,
-                    fontSize: widget.compact ? 15 : 16,
+                    fontSize: widget.promoBar ? 16 : (widget.compact ? 15 : 16),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -98,49 +122,113 @@ class _BookRoomButtonContentState extends State<_BookRoomButtonContent> {
 }
 
 class BookRoomPromoCard extends StatelessWidget {
-  const BookRoomPromoCard({super.key});
+  const BookRoomPromoCard({
+    this.imageUrl,
+    this.title,
+    this.subtitle,
+    super.key,
+  });
+
+  final String? imageUrl;
+  final String? title;
+  final String? subtitle;
+
+  bool get _hasSlogan {
+    final t = title?.trim() ?? '';
+    final s = subtitle?.trim() ?? '';
+    return t.isNotEmpty || s.isNotEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            SalangaColors.textDark,
-            Color(0xFF392D23),
-          ],
-        ),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Жить в шале,\nпросыпаться в тайге',
-            style: GoogleFonts.ptSerif(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              height: 1.25,
+    final resolved = resolveBannerMediaUrl(imageUrl ?? '');
+    final hasNetwork = resolved.isNotEmpty;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = kHomeTopBannerHeight(constraints.maxWidth);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(kHomeBannerRadius),
+          child: SizedBox(
+            height: height,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(
+                  color: SalangaColors.textDark,
+                  child: AdminBannerImage(
+                    imageUrl: hasNetwork ? resolved : null,
+                    sortOrder: 0,
+                  ),
+                ),
+                if (_hasSlogan) ...[
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 120,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.45),
+                            Colors.black.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 18,
+                    left: 18,
+                    right: 18,
+                    child: _PromoSlogan(title: title, subtitle: subtitle),
+                  ),
+                ],
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: BookRoomButton(fullWidth: true, promoBar: true),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Подберите номер на официальном сайте курорта',
-            style: GoogleFonts.openSans(
-              color: Colors.white.withValues(alpha: 0.88),
-              fontSize: 14,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const BookRoomButton(fullWidth: true),
-        ],
-      ),
+        );
+      },
+    );
+  }
+}
+
+class _PromoSlogan extends StatelessWidget {
+  const _PromoSlogan({this.title, this.subtitle});
+
+  final String? title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final lineStyle = GoogleFonts.ptSerif(
+      color: Colors.white,
+      fontSize: 22,
+      height: 1.15,
+      fontWeight: FontWeight.w600,
+      shadows: const [
+        Shadow(color: Color(0x66000000), blurRadius: 8, offset: Offset(0, 1)),
+      ],
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title != null && title!.trim().isNotEmpty)
+          Text(title!.trim(), style: lineStyle),
+        if (subtitle != null && subtitle!.trim().isNotEmpty)
+          Text(subtitle!.trim(), style: lineStyle),
+      ],
     );
   }
 }

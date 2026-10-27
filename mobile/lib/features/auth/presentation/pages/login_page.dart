@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/book_room_button.dart';
-import '../../../../shared/widgets/install_app_banner.dart';
 import '../../../../shared/widgets/salanga_brand_header.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -68,9 +67,7 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SalangaBrandHeader(),
-                      const SizedBox(height: 16),
-                      const InstallAppBanner(compact: true),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
                       Text(
                         l10n.login,
                         textAlign: TextAlign.center,

@@ -1,0 +1,9 @@
+; Положите рядом с SalangaExtDll.dll (каталог FarCards / r_keeper).
+; Ключ RKeeper — в админке: Интеграции → POS или POS_API_KEY_RKEEPER на сервере.
+
+[API]
+BaseUrl=https://admin.salanga.ru
+ApiKey=YOUR_RKEEPER_POS_API_KEY
+TimeoutSec=30
+Log=2
+XMLCP=1251

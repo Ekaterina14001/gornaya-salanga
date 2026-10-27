@@ -202,9 +202,7 @@ func (r *ContentRepository) ListLiftsAdmin(ctx context.Context) ([]map[string]an
 
 func (r *ContentRepository) GetHeadliners(ctx context.Context) ([]map[string]any, error) {
 	if r.pool == nil {
-		return []map[string]any{
-			{"title": "Добро пожаловать в Горную Салангу", "subtitle": "Горнолыжный комплекс Кузбасса"},
-		}, nil
+		return []map[string]any{}, nil
 	}
 	rows, err := r.pool.Query(ctx, `
 		SELECT id, title, subtitle, image_url, link_url, sort_order
@@ -254,17 +252,21 @@ func (r *ContentRepository) UpdateHeadliner(ctx context.Context, id string, titl
 	if r.pool == nil {
 		return map[string]any{"id": id}, nil
 	}
+	var imageArg any
+	if imageURL != nil {
+		imageArg = *imageURL
+	}
 	_, err := r.pool.Exec(ctx, `
 		UPDATE content_headliners SET
 			title = COALESCE($2, title),
 			subtitle = COALESCE($3, subtitle),
-			image_url = COALESCE($4, image_url),
+			image_url = CASE WHEN $8::boolean THEN $4 ELSE image_url END,
 			link_url = COALESCE($5, link_url),
 			sort_order = COALESCE($6, sort_order),
 			is_active = COALESCE($7, is_active),
 			updated_at = NOW()
 		WHERE id = $1
-	`, id, title, subtitle, imageURL, linkURL, sortOrder, active)
+	`, id, title, subtitle, imageArg, linkURL, sortOrder, active, imageURL != nil)
 	if err != nil {
 		return nil, err
 	}

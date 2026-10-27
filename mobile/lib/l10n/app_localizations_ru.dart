@@ -106,7 +106,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get installAppIosHint =>
-      'Safari → Поделиться → «На экран Домой» → Добавить.';
+      'Чтобы убрать панели Safari: Поделиться (□↑) → «На экран Домой» → Добавить. Дальше открывайте только с иконки «Саланга» на экране.';
 
   @override
   String get installAppAndroidHint =>
@@ -125,7 +125,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notifications => 'Уведомления';
 
   @override
-  String get contact => 'Контакты';
+  String get contact => 'Написать';
 
   @override
   String get balance => 'Баланс бонусов';
