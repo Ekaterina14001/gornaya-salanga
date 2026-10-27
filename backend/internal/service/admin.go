@@ -177,6 +177,10 @@ func (s *AdminService) ListPOSKeys(ctx context.Context) (map[string]any, error) 
 		companyID = "1"
 	}
 	base := strings.TrimRight(s.cfg.PublicAPIURL, "/")
+	fcPublicRoot := strings.TrimRight(s.cfg.AppPublicURL, "/")
+	if fcPublicRoot == "" || strings.Contains(fcPublicRoot, "localhost") || strings.Contains(fcPublicRoot, "127.0.0.1") {
+		fcPublicRoot = base
+	}
 	return map[string]any{
 		"apiUrl":         base + "/api/partner/v2",
 		"companyId":      companyID,
@@ -189,11 +193,29 @@ func (s *AdminService) ListPOSKeys(ctx context.Context) (map[string]any, error) 
 		},
 		"farcards": map[string]any{
 			"baseUrl":            base + "/api/farcards",
+			"publicSiteUrl":      fcPublicRoot,
 			"getCardInfoExPath":  "/getcardinfoex",
 			"transactionsExPath": "/transactionsex",
 			"findByQrPath":       "/findbyqr",
 			"auth":               "HTTP-заголовок X-API-Key (ключ системы RKeeper)",
 			"cardCodeHint":       "Card / CardCode = числовой ID участника (uds_participants.id). Получить через findbyqr (Kind=3) по QR из приложения.",
+			"recommendedIntegration": "SalangaExtDll — FarCards Type=1 (32-bit DLL, без ExtDllHTTP UCS)",
+			"dllInfo": map[string]string{
+				"fileName":     "SalangaExtDll.dll",
+				"iniName":      "SalangaExtDll.ini",
+				"farcardsDll":  "SalangaExtDll",
+				"architecture": "Win32 (i686)",
+				"farcardsVer":  "6.xx",
+				"repoReadme":   "integrations/salanga-extdll/README.md",
+				"ciArtifact":   "SalangaExtDll-win32 (GitHub Actions)",
+			},
+			"setupSteps": []string{
+				"Собрать или получить SalangaExtDll.dll (Win32) и положить рядом с FarCards.exe.",
+				"Создать SalangaExtDll.ini (BaseUrl — корень сайта ниже, ApiKey — X-API-Key RKeeper).",
+				"В Farcards.ini: Type=1, DLL=SalangaExtDll, Log=3, XMLCP=1251.",
+				"Обеспечить исходящий HTTPS (443) с сервера FarCards на указанный BaseUrl.",
+				"Проверка: FarCards.exe /desktop, логи FarCards.LOG и SalangaExtDll.log.",
+			},
 			"extDllHttpIni": map[string]string{
 				"Address":        base,
 				"GetCardInfoEx":  "/api/farcards/getcardinfoex",
